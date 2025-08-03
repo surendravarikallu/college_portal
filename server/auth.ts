@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import rateLimit from "express-rate-limit";
 
 declare global {
   namespace Express {
@@ -15,7 +16,7 @@ declare global {
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
@@ -28,22 +29,45 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-async function createDefaultUser() {
+async function createDefaultUsers() {
   try {
     // Test database connection first
     await storage.testConnection();
     
-    const existingUser = await storage.getUserByUsername("tpo_admin");
-    if (!existingUser) {
-      const defaultUser = {
+    // Create default TPO user
+    const existingTpoUser = await storage.getUserByUsername("tpo_admin");
+    if (!existingTpoUser) {
+      const defaultTpoUser = {
         username: "tpo_admin",
+        name: "TPO Administrator",
         password: await hashPassword("admin123"),
         role: "tpo"
       };
-      await storage.createUser(defaultUser);
+      await storage.createUser(defaultTpoUser);
       console.log("Default TPO user created: username=tpo_admin, password=admin123");
     } else {
-      console.log("Default TPO user already exists");
+      // Update existing user to have name field if missing
+      if (!existingTpoUser.name) {
+        await storage.updateUserByName("tpo_admin", "TPO Administrator");
+        console.log("Updated existing TPO user with name field");
+      } else {
+        console.log("Default TPO user already exists with name");
+      }
+    }
+
+    // Create default Admin user
+    const existingAdminUser = await storage.getUserByUsername("admin");
+    if (!existingAdminUser) {
+      const defaultAdminUser = {
+        username: "admin",
+        name: "System Administrator",
+        password: await hashPassword("admin123"),
+        role: "admin"
+      };
+      await storage.createUser(defaultAdminUser);
+      console.log("Default Admin user created: username=admin, password=admin123");
+    } else {
+      console.log("Default Admin user already exists");
     }
   } catch (error: any) {
     if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
@@ -58,11 +82,27 @@ async function createDefaultUser() {
 }
 
 export function setupAuth(app: Express) {
+  // Rate limiting for auth endpoints
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: 'Too many authentication attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || 'development-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     store: storage.sessionStore,
+    cookie: {
+      secure: false, // Set to false for development
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax' as const,
+    },
+    name: 'sessionId',
   };
 
   app.set("trust proxy", 1);
@@ -70,8 +110,8 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Create default TPO user if it doesn't exist
-  createDefaultUser();
+  // Create default users if they don't exist
+  createDefaultUsers();
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -84,13 +124,28 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log("Serializing user:", user.id);
+    done(null, user.id);
+  });
+  
   passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUser(id);
-    done(null, user);
+    try {
+      console.log("Deserializing user ID:", id);
+      const user = await storage.getUser(id);
+      if (!user) {
+        console.log("User not found during deserialization");
+        return done(null, false);
+      }
+      console.log("User deserialized successfully:", user.username);
+      done(null, user);
+    } catch (error) {
+      console.error("Error deserializing user:", error);
+      done(null, false);
+    }
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  app.post("/api/register", authLimiter, async (req, res, next) => {
     const existingUser = await storage.getUserByUsername(req.body.username);
     if (existingUser) {
       return res.status(400).send("Username already exists");
@@ -107,8 +162,22 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", authLimiter, passport.authenticate("local"), (req, res) => {
+    console.log("=== Login successful ===");
+    console.log("User:", req.user);
+    console.log("Session ID:", req.sessionID);
+    console.log("Session:", req.session);
+    console.log("Is authenticated:", req.isAuthenticated());
+    
+    // Force session save
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.status(500).json({ message: "Session save failed" });
+      }
+      console.log("Session saved successfully");
+      res.status(200).json(req.user);
+    });
   });
 
   app.post("/api/logout", (req, res, next) => {
@@ -119,7 +188,44 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    console.log("=== /api/user endpoint called ===");
+    console.log("Session ID:", req.sessionID);
+    console.log("Is authenticated:", req.isAuthenticated());
+    console.log("User:", req.user);
+    console.log("Session:", req.session);
+    console.log("Cookies:", req.headers.cookie);
+    
+    if (!req.isAuthenticated()) {
+      console.log("User not authenticated - returning 401");
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    console.log("User authenticated - returning user data");
     res.json(req.user);
+  });
+
+  // Test session endpoint
+  app.get("/api/test-session", (req, res) => {
+    console.log("=== /api/test-session endpoint called ===");
+    console.log("Session ID:", req.sessionID);
+    console.log("Session exists:", !!req.session);
+    console.log("Session data:", req.session);
+    console.log("Cookies:", req.headers.cookie);
+    
+    res.json({ 
+      sessionId: req.sessionID,
+      sessionExists: !!req.session,
+      sessionData: req.session,
+      cookies: req.headers.cookie
+    });
+  });
+
+  // Clear all sessions (for schema updates)
+  app.post("/api/clear-sessions", async (req, res) => {
+    try {
+      await storage.sessionStore.clear();
+      res.json({ message: "All sessions cleared" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to clear sessions" });
+    }
   });
 }

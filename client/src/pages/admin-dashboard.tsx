@@ -29,6 +29,7 @@ import { StudentManagement } from '@/components/student-management';
 import { AlumniManagement } from '@/components/alumni-management';
 import { NewsManagement } from '@/components/news-management';
 import { AttendanceModal } from '@/components/attendance-modal';
+import AdminManagement from '@/components/admin-management';
 import collegeHeaderImg from '@assets/Screenshot 2025-07-25 113411_1753423944040.png';
 import { useToast } from '@/hooks/use-toast';
 
@@ -102,11 +103,29 @@ export default function AdminDashboard() {
   // Load years when department is selected - optimized
   useEffect(() => {
     if (selectedDept && students.length > 0) {
-      // Use existing students data instead of API call (filter out null/undefined)
-      const years = Array.from(new Set(
-        students.filter(s => s.branch === selectedDept).map(s => s.year).filter((year): year is number => Boolean(year))
-      )).sort((a, b) => b - a);
-      setStudentYears(years);
+      // Extract unique batch strings from batch field (e.g., "2020-2024", "2021-2025")
+      const batches = Array.from(new Set(
+        students
+          .filter(s => s.branch === selectedDept && s.batch)
+          .map(s => s.batch)
+          .filter((batch): batch is string => Boolean(batch))
+      )).sort((a, b) => {
+        // Sort by end year (extract last 4 digits)
+        const aEndYear = a.match(/(\d{4})(?:-\d{4})?$/)?.[1];
+        const bEndYear = b.match(/(\d{4})(?:-\d{4})?$/)?.[1];
+        return (parseInt(bEndYear || '0') - parseInt(aEndYear || '0'));
+      });
+      
+      // Store both batches and their end years
+      const batchData = batches.map(batch => {
+        const match = batch.match(/(\d{4})(?:-\d{4})?$/);
+        const endYear = match ? parseInt(match[1]) : 0;
+        return { batch, endYear };
+      });
+      
+      // Store batch strings for display and end years for filtering
+      (window as any).batchData = batchData;
+      setStudentYears(batchData.map(b => b.endYear));
       setSelectedStudentYear(null);
       setStudentsNav([]);
       setSelectedStudent(null);
@@ -129,10 +148,17 @@ export default function AdminDashboard() {
   // Load students when year is selected - optimized
   useEffect(() => {
     if (selectedDept && selectedStudentYear !== null && students.length > 0) {
-      // Use existing students data instead of API call
-      const filteredStudents = students.filter(
-        s => s.branch === selectedDept && s.year === selectedStudentYear
-      );
+      // Filter students by department and batch year
+      const filteredStudents = students.filter(s => {
+        if (s.branch !== selectedDept) return false;
+        
+        // Extract end year from batch format "2020-2024" or "2024"
+        const batchStr = s.batch || '';
+        const match = batchStr.match(/(\d{4})(?:-\d{4})?$/);
+        const batchYear = match ? parseInt(match[1]) : null;
+        
+        return batchYear === selectedStudentYear;
+      });
       setStudentsNav(filteredStudents);
     }
   }, [selectedDept, selectedStudentYear, students]);
@@ -217,11 +243,11 @@ export default function AdminDashboard() {
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-3 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/50">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span className="text-sm font-medium text-slate-700">Welcome, {user?.username}</span>
+                <span className="text-sm font-medium text-slate-700">Welcome, {user?.name || user?.username}</span>
               </div>
               <Button 
                 variant="ghost" 
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 ripple btn-3d magnetic" 
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 hover:scale-105" 
                 onClick={handleLogout}
               >
                 <LogOut className="w-4 h-4 mr-2" /> Logout
@@ -233,7 +259,7 @@ export default function AdminDashboard() {
       {/* Dashboard Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="w-full animate-scale-in">
-          <TabsList className="grid w-full grid-cols-9 mb-8">
+          <TabsList className="grid w-full grid-cols-10 mb-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
@@ -241,6 +267,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="alumni">Alumni</TabsTrigger>
             <TabsTrigger value="news">News</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="admins">Admins</TabsTrigger>
             <TabsTrigger value="exports">Exports</TabsTrigger>
             <TabsTrigger value="imports">Imports</TabsTrigger>
           </TabsList>
@@ -465,7 +492,7 @@ export default function AdminDashboard() {
                 <Card className="hierarchy-fade-in">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <CardTitle>Years in {selectedDept}</CardTitle>
+                      <CardTitle>Batch Years in {selectedDept}</CardTitle>
                       <div className="flex items-center space-x-2 text-sm text-slate-500">
                         <span>/</span>
                         <span className="breadcrumb-enter">{selectedDept}</span>
@@ -487,12 +514,20 @@ export default function AdminDashboard() {
                 <Card className="hierarchy-fade-in">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <CardTitle>{selectedDept} Year {selectedStudentYear} Students</CardTitle>
+                      <CardTitle>{selectedDept} {(() => {
+                        const batchData = (window as any).batchData || [];
+                        const batchInfo = batchData.find((b: any) => b.endYear === selectedStudentYear);
+                        return batchInfo ? batchInfo.batch : `Batch Year ${selectedStudentYear}`;
+                      })()} Students</CardTitle>
                       <div className="flex items-center space-x-2 text-sm text-slate-500">
                         <span>/</span>
                         <span className="breadcrumb-enter">{selectedDept}</span>
                         <span>/</span>
-                        <span className="breadcrumb-enter">Year {selectedStudentYear}</span>
+                        <span className="breadcrumb-enter">{(() => {
+                          const batchData = (window as any).batchData || [];
+                          const batchInfo = batchData.find((b: any) => b.endYear === selectedStudentYear);
+                          return batchInfo ? batchInfo.batch : `Batch Year ${selectedStudentYear}`;
+                        })()}</span>
                       </div>
                     </div>
                     <Button 
@@ -736,6 +771,10 @@ export default function AdminDashboard() {
           {/* Notifications Tab */}
           <TabsContent value="notifications">
             <NotificationManagement />
+          </TabsContent>
+          {/* Admins Tab */}
+          <TabsContent value="admins">
+            <AdminManagement />
           </TabsContent>
           {/* Exports Tab */}
           <TabsContent value="exports">

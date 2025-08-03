@@ -88,8 +88,10 @@ export function ImportFunctions() {
   const getCSVTemplate = () => {
     const templates = {
       students: `name,rollNumber,branch,year,batch,email,phone,selected,companyName,package,role,photoUrl,offerLetterUrl
-John Doe,2024001,CSE,2024,2020-2024,john@example.com,1234567890,true,TCS,12,Software Engineer,,
-Jane Smith,2024002,ECE,2024,2020-2024,jane@example.com,1234567891,false,,,,,,`,
+John Doe,2024001,CSE,3,2020-2024,john@example.com,1234567890,true,TCS,12,Software Engineer,,
+Jane Smith,2024002,ECE,2,2020-2024,jane@example.com,1234567891,false,,,,,,
+Mike Johnson,2024003,CSE,4,2020-2024,mike@example.com,1234567892,true,Infosys,10,Developer,,
+Sarah Wilson,2024004,ECE,1,2021-2025,sarah@example.com,1234567893,false,,,,,,`,
       events: `title,description,company,startDate,endDate,notificationLink,attachmentUrl
 Campus Drive,Technical interview and coding round,TCS,2024-03-15T09:00:00Z,2024-03-15T17:00:00Z,,
 Placement Drive,Final placement round,Infosys,2024-03-20T10:00:00Z,2024-03-20T16:00:00Z,https://example.com/notification,`,
@@ -224,7 +226,7 @@ Jane Smith,2020002,2020,MIT,MIT001,456 Oak Ave,1234567891,jane@mit.edu`,
                 name, rollNumber, branch, year, batch, email, phone, selected, companyName, package, role, photoUrl, offerLetterUrl
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                • Required: name, rollNumber • batch: study period (e.g., "2020-2024") • selected: true/false • package: LPA (number) • role: only for placed students
+                • Required: name, rollNumber • year: study year (1, 2, 3, 4) • batch: study period (e.g., "2020-2024") • selected: true/false • package: LPA (number) • role: only for placed students
               </p>
             </div>
             <div>

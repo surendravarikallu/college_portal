@@ -48,8 +48,8 @@ export default function AuthPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <img src={collegeHeaderImg} alt="KITS Logo" className="h-16 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-slate-800">KITS Training & Placement Portal</h1>
-            <p className="text-slate-600 mt-2">Akshar Institute of Technology - TPO Access Panel</p>
+            <h1 className="text-2xl font-bold text-slate-800"> Training & Placement Cell Portal </h1>
+            <p className="text-slate-600 mt-2">KITS Akshar Institute of Technology - TPO Access Panel</p>
           </div>
 
           <Card>

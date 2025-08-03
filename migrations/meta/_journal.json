@@ -29,6 +29,13 @@
       "when": 1754128766550,
       "tag": "0003_familiar_zaran",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1754236984896,
+      "tag": "0004_fast_hannibal_king",
+      "breakpoints": true
     }
   ]
 }

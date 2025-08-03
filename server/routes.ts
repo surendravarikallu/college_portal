@@ -2,10 +2,15 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import rateLimit from "express-rate-limit";
 import { 
-  insertNewsSchema, insertEventSchema, insertStudentSchema, 
+  insertUserSchema, insertNewsSchema, insertEventSchema, insertStudentSchema, 
   insertAlumniSchema, insertAttendanceSchema, insertHeroNotificationSchema, insertImportantNotificationSchema 
 } from "@shared/schema";
+import { validateFileUpload, validateInput, validateRequest, securityRateLimit } from "./security";
+import { csrfProtection, csrfTokenMiddleware } from "./csrf";
+import { requirePermission, requireRole, Permissions } from "./rbac";
+import { auditLog, logSecurityEvent } from "./audit";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -51,8 +56,98 @@ const upload = multer({
 });
 
 export function registerRoutes(app: Express): Server {
+  // Rate limiting
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // limit each IP to 5 requests per windowMs
+    message: 'Too many authentication attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
   // Setup authentication routes
   setupAuth(app);
+
+  // Admin management routes
+  app.get("/api/admins", 
+    requireRole(['admin', 'tpo']), // Allow both admin and tpo roles
+    auditLog('VIEW', 'ADMINS'),
+    async (req, res) => {
+      try {
+        const admins = await storage.getAllUsers();
+        res.json(admins);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch admins" });
+      }
+    }
+  );
+
+
+
+  app.post("/api/admins", 
+    apiLimiter,
+    requireRole(['admin', 'tpo']), // Allow both admin and tpo roles
+    // csrfProtection, // Temporarily disabled for testing
+    validateRequest,
+    auditLog('CREATE', 'ADMIN'),
+    async (req, res) => {
+      try {
+        const validatedData = insertUserSchema.parse(req.body);
+        
+        // Hash the password before saving
+        const { hashPassword } = await import('./auth');
+        const hashedPassword = await hashPassword(validatedData.password);
+        
+        const admin = await storage.createUser({
+          ...validatedData,
+          password: hashedPassword
+        });
+        
+        res.status(201).json(admin);
+      } catch (error: any) {
+        console.error("=== Admin Creation Error ===");
+        console.error("Request body:", req.body);
+        console.error("Error type:", error.constructor.name);
+        console.error("Error message:", error.message);
+        
+        if (error && error.errors) {
+          console.error("Zod validation error (admin):", error.errors);
+          res.status(400).json({ message: "Invalid admin data", details: error.errors });
+        } else {
+          console.error("Non-Zod error:", error);
+          res.status(400).json({ message: "Invalid admin data", error: error.message });
+        }
+      }
+    }
+  );
+
+  app.delete("/api/admins/:id", 
+    requireRole(['admin', 'tpo']), // Allow both admin and tpo roles
+    // csrfProtection, // Temporarily disabled for testing
+    auditLog('DELETE', 'ADMIN'),
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const success = await storage.deleteUser(id);
+        
+        if (!success) {
+          return res.status(404).json({ message: "Admin not found" });
+        }
+        
+        res.sendStatus(204);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to delete admin" });
+      }
+    }
+  );
 
   // Serve uploaded files
   app.use('/uploads', (req, res, next) => {
@@ -325,7 +420,7 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/students", upload.fields([
     { name: 'offerLetter', maxCount: 1 }
-  ]), async (req, res) => {
+  ]), validateFileUpload, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -844,6 +939,14 @@ export function registerRoutes(app: Express): Server {
               studentData[header] = value;
               break;
             case 'year':
+              const yearValue = parseInt(value);
+              if (!isNaN(yearValue) && yearValue >= 1 && yearValue <= 4) {
+                studentData[header] = yearValue;
+              } else {
+                errors.push(`Row ${i + 2}: Year must be between 1 and 4 (study year)`);
+                continue;
+              }
+              break;
             case 'package':
               const numValue = parseInt(value);
               if (!isNaN(numValue)) {

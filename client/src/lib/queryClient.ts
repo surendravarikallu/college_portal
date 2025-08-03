@@ -12,9 +12,22 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Get CSRF token from user data if available
+  const userData = queryClient.getQueryData(["/api/user"]) as any;
+  const csrfToken = userData?.csrfToken;
+  
+  const headers: Record<string, string> = {};
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  // Temporarily disable CSRF tokens since CSRF protection is disabled
+  // if (csrfToken) {
+  //   headers["X-CSRF-Token"] = csrfToken;
+  // }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,11 +42,31 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = queryKey.join("/") as string;
+    const fullUrl = url.startsWith("http") ? url : `http://localhost:5000${url}`;
+    
+    console.log("Making request to:", fullUrl);
+    
+    // Get CSRF token from user data if available
+    const userData = queryClient.getQueryData(["/api/user"]) as any;
+    const csrfToken = userData?.csrfToken;
+    
+    const headers: Record<string, string> = {};
+    // Temporarily disable CSRF tokens since CSRF protection is disabled
+    // if (csrfToken) {
+    //   headers["X-CSRF-Token"] = csrfToken;
+    // }
+    
+    const res = await fetch(fullUrl, {
       credentials: "include",
+      headers,
     });
 
+    console.log("Response status:", res.status);
+    console.log("Response headers:", Object.fromEntries(res.headers.entries()));
+
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      console.log("401 Unauthorized - returning null");
       return null;
     }
 

@@ -21,7 +21,13 @@ export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  deleteUser(id: number): Promise<boolean>;
+  updateUserByName(username: string, name: string): Promise<boolean>;
+
+  // Audit logging
+  createAuditLog(auditEntry: any): Promise<void>;
 
   // News methods
   getAllNews(): Promise<News[]>;
@@ -80,8 +86,36 @@ export class DatabaseStorage implements IStorage {
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
       pool: pool, 
-      createTableIfMissing: true 
+      createTableIfMissing: true,
+      tableName: 'session'
     });
+    
+    // Test session store connection
+    this.testSessionStore();
+  }
+
+  async testSessionStore() {
+    try {
+      // Test if session table exists
+      const client = await pool.connect();
+      const result = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'session'
+        );
+      `);
+      client.release();
+      
+      if (result.rows[0].exists) {
+        console.log("✅ Session table exists");
+      } else {
+        console.log("❌ Session table does not exist - creating...");
+        // The session store should create it automatically
+      }
+    } catch (error) {
+      console.error("❌ Session store test failed:", error);
+    }
   }
 
   async testConnection(): Promise<void> {
@@ -113,6 +147,23 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async updateUserByName(username: string, name: string): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({ name })
+      .where(eq(users.username, username));
+    return (result.rowCount ?? 0) > 0;
   }
 
   // News methods
@@ -354,6 +405,13 @@ export class DatabaseStorage implements IStorage {
   async deleteImportantNotification(id: number): Promise<boolean> {
     const result = await db.delete(importantNotifications).where(eq(importantNotifications.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Audit logging implementation
+  async createAuditLog(auditEntry: any): Promise<void> {
+    // For now, just log to console
+    console.log("🔍 AUDIT LOG:", auditEntry);
+    // TODO: Implement actual audit log storage in database
   }
 
   async getPlacementStats(): Promise<{ studentsPlaced: number; activeCompanies: number; avgPackage: number; highestPackage: number; }> {

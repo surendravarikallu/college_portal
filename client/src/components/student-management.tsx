@@ -275,18 +275,22 @@ export function StudentManagement() {
     }
   };
 
-  // Group students by branch, batch, and year
+  // Group students by branch, batch, and batch year
   const groupedStudents = filteredStudents.reduce((acc, student) => {
     const branch = student.branch || 'Unknown';
     const batch = student.batch || 'Unknown Batch';
-    const year = student.year || 0;
+    
+    // Extract end year from batch format "2020-2024" or "2024"
+    const batchStr = student.batch || '';
+    const match = batchStr.match(/(\d{4})(?:-\d{4})?$/);
+    const batchYear = match ? parseInt(match[1]) : 0;
     
     if (!acc[branch]) acc[branch] = {};
     if (!acc[branch][batch]) acc[branch][batch] = {};
-    if (!acc[branch][batch][year]) acc[branch][batch][year] = [];
-    acc[branch][batch][year].push(student);
+    if (!acc[branch][batch][batch]) acc[branch][batch][batch] = [];
+    acc[branch][batch][batch].push(student);
     return acc;
-  }, {} as Record<string, Record<string, Record<number, Student[]>>>);
+  }, {} as Record<string, Record<string, Record<string, Student[]>>>);
 
   if (isLoading) {
     return <div>Loading students...</div>;
@@ -375,9 +379,9 @@ export function StudentManagement() {
                     <h4 className="text-lg font-medium text-slate-700 mb-3 border-b pb-2">
                       Batch: {batch}
                     </h4>
-                    {Object.entries(yearGroups).map(([year, students]) => (
-                      <div key={year} className="mb-4 ml-4">
-                        <h5 className="text-md font-medium text-slate-600 mb-2">Year {year}</h5>
+                    {Object.entries(yearGroups).map(([batch, students]) => (
+                      <div key={batch} className="mb-4 ml-4">
+                        <h5 className="text-md font-medium text-slate-600 mb-2">Batch: {batch}</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {students.map((student) => (
                             <Card key={student.id} className="border">

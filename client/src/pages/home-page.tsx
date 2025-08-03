@@ -228,8 +228,8 @@ export default function HomePage() {
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold gradient-text-primary">KITS TPO</h1>
-                <p className="text-sm text-slate-600 font-medium">Training & Placement Office</p>
+                <h1 className="text-xl font-bold gradient-text-primary"> Training & Placement Cell</h1>
+                <p className="text-sm text-slate-600 font-medium">KITS Akshar Institute of Technology</p>
               </div>
             </div>
             <nav className="hidden md:flex space-x-8">

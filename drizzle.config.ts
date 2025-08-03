@@ -11,4 +11,6 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL,
   },
+  // Use single migration file approach
+  strict: false,
 });
