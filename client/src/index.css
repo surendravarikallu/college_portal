@@ -88,9 +88,9 @@
 }
 
 .glass-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+  transform: translateY(-2px) scale(1.005);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
 }
 
 .neon-border {
@@ -113,32 +113,32 @@
   left: 100%;
 }
 
-/* Floating Animation */
+/* Floating Animation - Reduced intensity */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-3px);
   }
 }
 
 .floating {
-  animation: float 3s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
 }
 
-/* Pulse Glow Effect */
+/* Pulse Glow Effect - Softer glow */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
   }
   50% {
-    box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 0 60px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
   }
 }
 
 .pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+  animation: pulse-glow 4s ease-in-out infinite;
 }
 
 /* Gradient Text Effects */
@@ -220,11 +220,11 @@
   height: 300px;
 }
 
-/* Slide In Animations */
+/* Slide In Animations - Smoother and less intrusive */
 @keyframes slideInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -235,7 +235,7 @@
 @keyframes slideInLeft {
   from {
     opacity: 0;
-    transform: translateX(-30px);
+    transform: translateX(-15px);
   }
   to {
     opacity: 1;
@@ -246,7 +246,7 @@
 @keyframes slideInRight {
   from {
     opacity: 0;
-    transform: translateX(30px);
+    transform: translateX(15px);
   }
   to {
     opacity: 1;
@@ -255,15 +255,15 @@
 }
 
 .animate-slide-up {
-  animation: slideInUp 0.6s ease-out forwards;
+  animation: slideInUp 0.4s ease-out forwards;
 }
 
 .animate-slide-left {
-  animation: slideInLeft 0.6s ease-out forwards;
+  animation: slideInLeft 0.4s ease-out forwards;
 }
 
 .animate-slide-right {
-  animation: slideInRight 0.6s ease-out forwards;
+  animation: slideInRight 0.4s ease-out forwards;
 }
 
 /* Scale and Fade */
@@ -282,19 +282,19 @@
   animation: scaleIn 0.5s ease-out forwards;
 }
 
-/* Stagger Animation */
+/* Stagger Animation - Reduced delays for better UX */
 .stagger-item {
   opacity: 0;
-  transform: translateY(20px);
-  animation: slideInUp 0.6s ease-out forwards;
+  transform: translateY(10px);
+  animation: slideInUp 0.4s ease-out forwards;
 }
 
-.stagger-item:nth-child(1) { animation-delay: 0.1s; }
-.stagger-item:nth-child(2) { animation-delay: 0.2s; }
-.stagger-item:nth-child(3) { animation-delay: 0.3s; }
-.stagger-item:nth-child(4) { animation-delay: 0.4s; }
-.stagger-item:nth-child(5) { animation-delay: 0.5s; }
-.stagger-item:nth-child(6) { animation-delay: 0.6s; }
+.stagger-item:nth-child(1) { animation-delay: 0.05s; }
+.stagger-item:nth-child(2) { animation-delay: 0.1s; }
+.stagger-item:nth-child(3) { animation-delay: 0.15s; }
+.stagger-item:nth-child(4) { animation-delay: 0.2s; }
+.stagger-item:nth-child(5) { animation-delay: 0.25s; }
+.stagger-item:nth-child(6) { animation-delay: 0.3s; }
 
 /* Morphing Background */
 @keyframes morphBackground {
@@ -365,15 +365,15 @@
   animation: spin-glow 1s linear infinite;
 }
 
-/* Interactive Hover States */
+/* Interactive Hover States - Simplified for performance */
 .interactive-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease-out;
   cursor: pointer;
 }
 
 .interactive-card:hover {
-  transform: translateY(-4px) rotateX(5deg);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(59, 130, 246, 0.1);
 }
 
 /* Utility Classes */
@@ -413,17 +413,55 @@
   @apply border-red-600;
 }
 
-/* Page Transition */
+/* Page Transition - Smoother */
 .page-transition {
   opacity: 0;
-  transform: translateY(20px);
-  animation: pageIn 0.6s ease-out forwards;
+  transform: translateY(10px);
+  animation: pageIn 0.4s ease-out forwards;
 }
 
 @keyframes pageIn {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Hierarchy Navigation Animations */
+.hierarchy-fade-in {
+  opacity: 0;
+  transform: translateX(10px);
+  animation: hierarchyFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes hierarchyFadeIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.hierarchy-item {
+  transition: all 0.2s ease-out;
+  cursor: pointer;
+}
+
+.hierarchy-item:hover {
+  transform: translateX(3px);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Breadcrumb Animation */
+.breadcrumb-enter {
+  opacity: 0;
+  transform: scale(0.95);
+  animation: breadcrumbEnter 0.2s ease-out forwards;
+}
+
+@keyframes breadcrumbEnter {
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                 <CardContent className="p-6 relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div className="flex items-center relative z-10">
-                    <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-glow-primary floating">
+                    <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-glow">
                       <Users className="text-white text-2xl" />
                     </div>
                     <div className="ml-6">
@@ -266,7 +266,7 @@ export default function AdminDashboard() {
                 <CardContent className="p-6 relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div className="flex items-center relative z-10">
-                    <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-glow-green floating" style={{animationDelay: '0.5s'}}>
+                    <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-glow-green">
                       <Briefcase className="text-white text-2xl" />
                     </div>
                     <div className="ml-6">
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                 <CardContent className="p-6 relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div className="flex items-center relative z-10">
-                    <div className="p-4 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl shadow-lg floating" style={{animationDelay: '1s'}}>
+                    <div className="p-4 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl shadow-lg">
                       <Calendar className="text-white text-2xl" />
                     </div>
                     <div className="ml-6">
@@ -294,7 +294,7 @@ export default function AdminDashboard() {
                 <CardContent className="p-6 relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   <div className="flex items-center relative z-10">
-                    <div className="p-4 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-glow-purple floating" style={{animationDelay: '1.5s'}}>
+                    <div className="p-4 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-glow-purple">
                       <GraduationCap className="text-white text-2xl" />
                     </div>
                     <div className="ml-6">
@@ -363,32 +363,46 @@ export default function AdminDashboard() {
           {/* Events Tab */}
           <TabsContent value="events">
             {!selectedCompany ? (
-              <>
+              <div className="hierarchy-fade-in">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-2xl font-semibold text-slate-800">Events by Company</h3>
-                  <Button className="bg-primary text-white" onClick={() => setShowEventManagement(true)}>
+                  <Button className="bg-primary text-white hover:bg-primary/90 transition-colors" onClick={() => setShowEventManagement(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Event
                   </Button>
                 </div>
                 <CompanyList companies={companies} onSelect={setSelectedCompany} />
-              </>
+              </div>
             ) : !selectedEventYear ? (
-              <>
+              <div className="hierarchy-fade-in">
                 <div className="flex justify-between items-center mb-4">
-                  <button className="px-4 py-2 bg-slate-200 rounded" onClick={() => setSelectedCompany(null)}>Back</button>
-                  <Button className="bg-primary text-white" onClick={() => setShowEventManagement(true)}>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" onClick={() => setSelectedCompany(null)} className="breadcrumb-enter">
+                      Back to Companies
+                    </Button>
+                    <span className="text-slate-500">/</span>
+                    <span className="font-medium text-slate-700">{selectedCompany}</span>
+                  </div>
+                  <Button className="bg-primary text-white hover:bg-primary/90 transition-colors" onClick={() => setShowEventManagement(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Event
                   </Button>
                 </div>
                 <EventYearList years={eventYears} onSelect={setSelectedEventYear} />
-              </>
+              </div>
             ) : !selectedEvent ? (
-              <>
+              <div className="hierarchy-fade-in">
                 <div className="flex justify-between items-center mb-4">
-                  <button className="px-4 py-2 bg-slate-200 rounded" onClick={() => setSelectedEventYear(null)}>Back</button>
-                  <Button className="bg-primary text-white" onClick={() => setShowEventManagement(true)}>
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" onClick={() => setSelectedEventYear(null)} className="breadcrumb-enter">
+                      Back to Years
+                    </Button>
+                    <span className="text-slate-500">/</span>
+                    <span className="font-medium text-slate-700">{selectedCompany}</span>
+                    <span className="text-slate-500">/</span>
+                    <span className="font-medium text-slate-700">{selectedEventYear}</span>
+                  </div>
+                  <Button className="bg-primary text-white hover:bg-primary/90 transition-colors" onClick={() => setShowEventManagement(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Event
                   </Button>
@@ -414,9 +428,11 @@ export default function AdminDashboard() {
                     }
                   }}
                 />
-              </>
+              </div>
             ) : (
-              <EventDetails event={selectedEvent} onBack={() => setSelectedEvent(null)} />
+              <div className="hierarchy-fade-in">
+                <EventDetails event={selectedEvent} onBack={() => setSelectedEvent(null)} />
+              </div>
             )}
           </TabsContent>
           {/* Students Tab */}
@@ -437,7 +453,7 @@ export default function AdminDashboard() {
               </div>
 
               {!selectedDept ? (
-                <Card>
+                <Card className="hierarchy-fade-in">
                   <CardHeader>
                     <CardTitle>Browse Students by Department</CardTitle>
                   </CardHeader>
@@ -446,13 +462,19 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ) : !selectedStudentYear ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Years in {selectedDept}</CardTitle>
+                <Card className="hierarchy-fade-in">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <CardTitle>Years in {selectedDept}</CardTitle>
+                      <div className="flex items-center space-x-2 text-sm text-slate-500">
+                        <span>/</span>
+                        <span className="breadcrumb-enter">{selectedDept}</span>
+                      </div>
+                    </div>
                     <Button 
                       variant="outline" 
                       onClick={() => setSelectedDept(null)}
-                      className="ml-auto"
+                      className="breadcrumb-enter hover:bg-slate-50"
                     >
                       Back to Departments
                     </Button>
@@ -462,13 +484,21 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ) : !selectedStudent ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{selectedDept} Year {selectedStudentYear} Students</CardTitle>
+                <Card className="hierarchy-fade-in">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <CardTitle>{selectedDept} Year {selectedStudentYear} Students</CardTitle>
+                      <div className="flex items-center space-x-2 text-sm text-slate-500">
+                        <span>/</span>
+                        <span className="breadcrumb-enter">{selectedDept}</span>
+                        <span>/</span>
+                        <span className="breadcrumb-enter">Year {selectedStudentYear}</span>
+                      </div>
+                    </div>
                     <Button 
                       variant="outline" 
                       onClick={() => setSelectedStudentYear(null)}
-                      className="ml-auto"
+                      className="breadcrumb-enter hover:bg-slate-50"
                     >
                       Back to Years
                     </Button>
@@ -478,7 +508,6 @@ export default function AdminDashboard() {
                       students={studentsNav} 
                       onSelect={setSelectedStudent}
                       onEdit={(student) => {
-                        // Set editing student and open management modal
                         setShowStudentManagement(true);
                       }}
                       onDelete={async (studentId) => {
@@ -489,7 +518,6 @@ export default function AdminDashboard() {
                           });
                           if (response.ok) {
                             toast({ title: 'Success', description: 'Student deleted successfully!' });
-                            // Refresh data
                             window.location.reload();
                           }
                         } catch (error) {
@@ -500,13 +528,13 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
-                  <CardHeader>
+                <Card className="hierarchy-fade-in">
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Student Details</CardTitle>
                     <Button 
                       variant="outline" 
                       onClick={() => setSelectedStudent(null)}
-                      className="ml-auto"
+                      className="breadcrumb-enter hover:bg-slate-50"
                     >
                       Back to List
                     </Button>
