@@ -39,10 +39,10 @@ export function EventList({ events, onSelect, onEdit, onDelete }: EventListProps
         <Card 
           key={event.id} 
           variant="glass" 
-          className="stagger-item group overflow-hidden cursor-pointer hover:scale-105 transition-all duration-500"
+          className="stagger-item group overflow-visible cursor-pointer hover:scale-105 transition-all duration-500"
           style={{animationDelay: `${index * 0.1}s`}}
         >
-          <CardContent className="p-6 relative">
+          <CardContent className="p-6 relative overflow-visible">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
             <div className="flex justify-between items-start mb-6 relative z-10">
@@ -101,10 +101,10 @@ export function EventList({ events, onSelect, onEdit, onDelete }: EventListProps
               )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-200/50 relative z-10">
+            <div className="mt-6 pt-4 border-t border-slate-200/50 relative z-20">
               <Button
                 size="sm"
-                className="w-full btn-3d ripple magnetic bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-glow"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg border-2 border-blue-500"
                 onClick={() => onSelect(event)}
               >
                 View Details

@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Search } from "lucide-react";
 import { GraduationCap, Calendar, Users, Trophy, Briefcase, User, TrendingUp, Building2, AlertCircle, Info, Star, ExternalLink, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlumniRegistrationModal } from "@/components/alumni-registration-modal";
 import { AttendanceModal } from "@/components/attendance-modal";
 import { Event, News, ImportantNotification } from "@shared/schema";
@@ -35,6 +37,8 @@ export default function HomePage() {
     upcoming: false,
     past: false,
   });
+  const [eventSearchTerm, setEventSearchTerm] = useState("");
+  const [eventSearchFilter, setEventSearchFilter] = useState<"all" | "title" | "company" | "description">("all");
 
   const toggleSection = (section: 'ongoing' | 'upcoming' | 'past') => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -84,23 +88,46 @@ export default function HomePage() {
   console.log("Events loading:", eventsLoading);
   console.log("Events error:", eventsError);
 
+  // Filter events based on search term
+  const filterEvents = (eventList: Event[]) => {
+    if (!eventSearchTerm) return eventList;
+    
+    const searchLower = eventSearchTerm.toLowerCase();
+    
+    switch (eventSearchFilter) {
+      case "title":
+        return eventList.filter(event => event.title.toLowerCase().includes(searchLower));
+      case "company":
+        return eventList.filter(event => event.company.toLowerCase().includes(searchLower));
+      case "description":
+        return eventList.filter(event => event.description.toLowerCase().includes(searchLower));
+      case "all":
+      default:
+        return eventList.filter(event => 
+          event.title.toLowerCase().includes(searchLower) ||
+          event.company.toLowerCase().includes(searchLower) ||
+          event.description.toLowerCase().includes(searchLower)
+        );
+    }
+  };
+
   // Determine event status based on dates
   const now = new Date();
-  const ongoingEvents = events.filter(event => {
+  const ongoingEvents = filterEvents(events.filter(event => {
     const startDate = new Date(event.startDate);
     const endDate = new Date(event.endDate);
     return startDate <= now && now <= endDate;
-  });
+  }));
 
-  const upcomingEvents = events.filter(event => {
+  const upcomingEvents = filterEvents(events.filter(event => {
     const startDate = new Date(event.startDate);
     return startDate > now;
-  });
+  }));
 
-  const pastEvents = events.filter(event => {
+  const pastEvents = filterEvents(events.filter(event => {
     const endDate = new Date(event.endDate);
     return endDate < now;
-  });
+  }));
 
   // Group events by company and year
   const groupEventsByCompanyAndYear = (eventList: Event[]) => {
@@ -196,8 +223,8 @@ export default function HomePage() {
       <header className="glass-card border-0 border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-18 py-2">
-            <div className="flex items-center space-x-4 animate-slide-left">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-glow floating">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-glow">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -205,13 +232,13 @@ export default function HomePage() {
                 <p className="text-sm text-slate-600 font-medium">Training & Placement Office</p>
               </div>
             </div>
-            <nav className="hidden md:flex space-x-8 animate-slide-up">
-              <a href="#home" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium hover:scale-105 magnetic">Home</a>
-              <a href="#events" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium hover:scale-105 magnetic">Events</a>
-              <a href="#students" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium hover:scale-105 magnetic">Students</a>
-              <a href="#news" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium hover:scale-105 magnetic">News</a>
+            <nav className="hidden md:flex space-x-8">
+              <a href="#home" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium cursor-pointer">Home</a>
+              <a href="#events" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium cursor-pointer">Events</a>
+              <a href="#alumni" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium cursor-pointer">Alumni</a>
+              <a href="#news" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium cursor-pointer">News</a>
             </nav>
-            <div className="flex items-center space-x-3 animate-slide-right">
+            <div className="flex items-center space-x-3">
               <Link href="/auth">
                 <Button className="bg-primary text-white hover:bg-primary/90">
                   <User className="w-4 h-4 mr-2" />
@@ -394,6 +421,42 @@ export default function HomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* Search Section */}
+                <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      <Input
+                        placeholder="Search events..."
+                        value={eventSearchTerm}
+                        onChange={(e) => setEventSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Select value={eventSearchFilter} onValueChange={(value: any) => setEventSearchFilter(value)}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue placeholder="Search by..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Fields</SelectItem>
+                        <SelectItem value="title">Event Title</SelectItem>
+                        <SelectItem value="company">Company</SelectItem>
+                        <SelectItem value="description">Description</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {eventSearchTerm && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setEventSearchTerm("");
+                          setEventSearchFilter("all");
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 <div className="space-y-4">
                   {/* Ongoing Events */}
                   <Collapsible open={openSections.ongoing} onOpenChange={() => toggleSection('ongoing')}>
@@ -604,7 +667,7 @@ export default function HomePage() {
           </div>
 
           {/* Right Column - Alumni Registration & Quick Stats */}
-          <div id="students" className="space-y-8">
+          <div id="alumni" className="space-y-8">
             {/* Alumni Registration Section */}
             <Card>
               <CardHeader>

@@ -206,12 +206,12 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-18 py-2">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-glow animate-pulse-glow">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-glow">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <div className="flex flex-col">
-                <h1 className="text-xl font-bold gradient-text-primary animate-slide-right">TPO Dashboard</h1>
-                <span className="text-sm text-slate-600 animate-slide-right" style={{animationDelay: '0.1s'}}>KITS Akshar Institute of Technology</span>
+                <h1 className="text-xl font-bold gradient-text-primary">TPO Dashboard</h1>
+                <span className="text-sm text-slate-600">KITS Akshar Institute of Technology</span>
               </div>
             </div>
             <div className="flex items-center space-x-6">

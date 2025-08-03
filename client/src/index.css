@@ -71,6 +71,7 @@
   body {
     @apply font-sans antialiased bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-foreground min-h-screen;
     background-attachment: fixed;
+    scroll-behavior: smooth;
   }
 
   .dark body {
@@ -479,3 +480,19 @@
   outline: none;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
 }
+
+/* Disable animations for Select dropdown but keep positioning */
+[data-radix-select-content] {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Keep positioning but disable animations */
+[data-radix-popper-content-wrapper] {
+  animation: none !important;
+  transition: none !important;
+}
+
+
+
+
