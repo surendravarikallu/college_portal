@@ -91,12 +91,12 @@ export default function HomePage() {
     const endDate = new Date(event.endDate);
     return startDate <= now && now <= endDate;
   });
-  
+
   const upcomingEvents = events.filter(event => {
     const startDate = new Date(event.startDate);
     return startDate > now;
   });
-  
+
   const pastEvents = events.filter(event => {
     const endDate = new Date(event.endDate);
     return endDate < now;
@@ -105,11 +105,11 @@ export default function HomePage() {
   // Group events by company and year
   const groupEventsByCompanyAndYear = (eventList: Event[]) => {
     const grouped: { [company: string]: { [year: number]: Event[] } } = {};
-    
+
     eventList.forEach(event => {
       const company = event.company || 'Unknown Company';
       const year = new Date(event.startDate).getFullYear();
-      
+
       if (!grouped[company]) {
         grouped[company] = {};
       }
@@ -118,7 +118,7 @@ export default function HomePage() {
       }
       grouped[company][year].push(event);
     });
-    
+
     return grouped;
   };
 
@@ -191,18 +191,27 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Navigation Header */}
-      <nav className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+    <div className="min-h-screen page-transition">
+      {/* Header */}
+      <header className="glass-card border-0 border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex flex-col justify-center">
-                <span className="text-xl font-bold text-slate-900 leading-tight text-left">KITS Akshar Institute of Technology</span>
-                <span className="text-base font-medium text-slate-700 text-left">T&P CELL Portal</span>
+          <div className="flex justify-between items-center h-18 py-2">
+            <div className="flex items-center space-x-4 animate-slide-left">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-glow floating">
+                <Building2 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold gradient-text-primary">KITS TPO</h1>
+                <p className="text-sm text-slate-600 font-medium">Training & Placement Office</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <nav className="hidden md:flex space-x-8 animate-slide-up">
+              <a href="#home" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium hover:scale-105 magnetic">Home</a>
+              <a href="#events" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium hover:scale-105 magnetic">Events</a>
+              <a href="#students" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium hover:scale-105 magnetic">Students</a>
+              <a href="#news" className="text-slate-600 hover:text-primary transition-all duration-300 font-medium hover:scale-105 magnetic">News</a>
+            </nav>
+            <div className="flex items-center space-x-3 animate-slide-right">
               <Link href="/auth">
                 <Button className="bg-primary text-white hover:bg-primary/90">
                   <User className="w-4 h-4 mr-2" />
@@ -212,7 +221,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-primary/80 text-white py-16">
@@ -321,7 +330,7 @@ export default function HomePage() {
                               <Badge className="text-xs bg-orange-500 text-white">{note.type}</Badge>
                             </div>
                           );
-                          
+
                           return note.link ? (
                             <a 
                               key={idx} 
@@ -352,7 +361,7 @@ export default function HomePage() {
                               <Badge className="text-xs bg-orange-500 text-white">{notification.type}</Badge>
                             </div>
                           );
-                          
+
                           return notification.link ? (
                             <a 
                               key={notification.id} 

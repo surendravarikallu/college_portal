@@ -200,20 +200,30 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen page-transition">
       {/* Dashboard Header */}
-      <div className="bg-white shadow-sm border-b border-slate-200">
+      <div className="glass-card border-0 border-b border-white/20 backdrop-blur-xl bg-white/90 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
+          <div className="flex justify-between items-center h-18 py-2">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-glow animate-pulse-glow">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
               <div className="flex flex-col">
-                <h1 className="text-lg font-bold text-slate-800">TPO Dashboard</h1>
-                <span className="text-xs text-slate-600">KITS Akshar Institute of Technology</span>
+                <h1 className="text-xl font-bold gradient-text-primary animate-slide-right">TPO Dashboard</h1>
+                <span className="text-sm text-slate-600 animate-slide-right" style={{animationDelay: '0.1s'}}>KITS Akshar Institute of Technology</span>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-slate-600">Welcome, {user?.username}</span>
-              <Button variant="ghost" className="text-red-600 hover:text-red-700" onClick={handleLogout}>
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-3 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/50">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span className="text-sm font-medium text-slate-700">Welcome, {user?.username}</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 ripple btn-3d magnetic" 
+                onClick={handleLogout}
+              >
                 <LogOut className="w-4 h-4 mr-2" /> Logout
               </Button>
             </div>
@@ -221,8 +231,8 @@ export default function AdminDashboard() {
         </div>
       </div>
       {/* Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Tabs defaultValue="overview" className="w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs defaultValue="overview" className="w-full animate-scale-in">
           <TabsList className="grid w-full grid-cols-9 mb-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
@@ -238,82 +248,113 @@ export default function AdminDashboard() {
           <TabsContent value="overview" className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-primary/10 rounded-lg">
-                      <Users className="text-primary text-xl" />
+              <Card variant="glass" className="stagger-item group overflow-hidden">
+                <CardContent className="p-6 relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="flex items-center relative z-10">
+                    <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-glow-primary floating">
+                      <Users className="text-white text-2xl" />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-slate-600">Total Students</p>
-                      <p className="text-2xl font-bold text-slate-800">{stats.totalStudents}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-green-100 rounded-lg">
-                      <Briefcase className="text-green-600 text-xl" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-slate-600">Placed Students</p>
-                      <p className="text-2xl font-bold text-slate-800">{stats.placedStudents}</p>
+                    <div className="ml-6">
+                      <p className="text-sm font-semibold text-slate-600 uppercase tracking-wider">Total Students</p>
+                      <p className="text-3xl font-bold gradient-text-primary mt-1">{stats.totalStudents}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-yellow-100 rounded-lg">
-                      <Calendar className="text-yellow-600 text-xl" />
+              <Card variant="glass" className="stagger-item group overflow-hidden">
+                <CardContent className="p-6 relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="flex items-center relative z-10">
+                    <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-glow-green floating" style={{animationDelay: '0.5s'}}>
+                      <Briefcase className="text-white text-2xl" />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-slate-600">Active Companies</p>
-                      <p className="text-2xl font-bold text-slate-800">{stats.activeCompanies}</p>
+                    <div className="ml-6">
+                      <p className="text-sm font-semibold text-slate-600 uppercase tracking-wider">Placed Students</p>
+                      <p className="text-3xl font-bold text-green-600 mt-1">{stats.placedStudents}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <GraduationCap className="text-blue-600 text-xl" />
+              <Card variant="glass" className="stagger-item group overflow-hidden">
+                <CardContent className="p-6 relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="flex items-center relative z-10">
+                    <div className="p-4 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl shadow-lg floating" style={{animationDelay: '1s'}}>
+                      <Calendar className="text-white text-2xl" />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-slate-600">Alumni Registered</p>
-                      <p className="text-2xl font-bold text-slate-800">{stats.alumniRegistered}</p>
+                    <div className="ml-6">
+                      <p className="text-sm font-semibold text-slate-600 uppercase tracking-wider">Active Companies</p>
+                      <p className="text-3xl font-bold text-yellow-600 mt-1">{stats.activeCompanies}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card variant="glass" className="stagger-item group overflow-hidden">
+                <CardContent className="p-6 relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="flex items-center relative z-10">
+                    <div className="p-4 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-glow-purple floating" style={{animationDelay: '1.5s'}}>
+                      <GraduationCap className="text-white text-2xl" />
+                    </div>
+                    <div className="ml-6">
+                      <p className="text-sm font-semibold text-slate-600 uppercase tracking-wider">Alumni Registered</p>
+                      <p className="text-3xl font-bold text-purple-600 mt-1">{stats.alumniRegistered}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
             {/* Recent Activities */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activities</CardTitle>
+            <Card variant="glass" className="animate-slide-up overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-slate-50/50 to-blue-50/50 backdrop-blur-sm">
+                <CardTitle gradient>Recent Activities</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  {events.slice(0, 5).map((event) => {
+                  {events.slice(0, 5).map((event, index) => {
                     let dateStr = 'Date not available';
                     if (event.startDate && !isNaN(new Date(event.startDate).getTime())) {
                       dateStr = new Date(event.startDate).toLocaleDateString();
                     }
                     const status = (event as any).status || 'upcoming';
                     return (
-                      <div key={event.id} className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
-                        <div className={`w-2 h-2 rounded-full ${status === 'ongoing' ? 'bg-green-500' : status === 'upcoming' ? 'bg-blue-500' : 'bg-slate-400'}`}></div>
-                        <span className="text-sm text-slate-600">{event.title} - {event.company} ({status})</span>
-                        <span className="text-xs text-slate-500 ml-auto">{dateStr}</span>
+                      <div 
+                        key={event.id} 
+                        className="flex items-center space-x-4 p-4 glass-card group hover:scale-[1.02] transition-all duration-300"
+                        style={{animationDelay: `${index * 0.1}s`}}
+                      >
+                        <div className={`w-3 h-3 rounded-full ${
+                          status === 'ongoing' ? 'bg-green-500 shadow-glow-green pulse-glow' : 
+                          status === 'upcoming' ? 'bg-blue-500 shadow-glow animate-pulse' : 
+                          'bg-slate-400'
+                        }`}></div>
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">
+                            {event.title} - {event.company}
+                          </span>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                              status === 'ongoing' ? 'bg-green-100 text-green-700' :
+                              status === 'upcoming' ? 'bg-blue-100 text-blue-700' :
+                              'bg-slate-100 text-slate-600'
+                            }`}>
+                              {status.toUpperCase()}
+                            </span>
+                            <span className="text-xs text-slate-500">{dateStr}</span>
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
                   {events.length === 0 && (
-                    <p className="text-slate-600 text-center py-8">No recent activities.</p>
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                        <Calendar className="w-8 h-8 text-slate-400" />
+                      </div>
+                      <p className="text-slate-600 font-medium">No recent activities.</p>
+                      <p className="text-slate-500 text-sm mt-1">Activities will appear here as they happen.</p>
+                    </div>
                   )}
                 </div>
               </CardContent>
