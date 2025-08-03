@@ -224,7 +224,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary to-primary/80 text-white py-16">
+      <section id="home" className="bg-gradient-to-r from-primary to-primary/80 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg" style={{textShadow: '0 2px 8px rgba(0,0,0,0.18)'}}>KITS Akshar Institute of Technology</h1>
@@ -246,7 +246,7 @@ export default function HomePage() {
             {/* News and Notifications Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Latest News Section */}
-              <Card>
+              <Card id="news">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <FileText className="w-5 h-5 text-primary mr-3" />
@@ -386,7 +386,7 @@ export default function HomePage() {
             </div>
 
             {/* Events Section */}
-            <Card>
+            <Card id="events">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Calendar className="w-5 h-5 text-primary mr-3" />
@@ -604,7 +604,7 @@ export default function HomePage() {
           </div>
 
           {/* Right Column - Alumni Registration & Quick Stats */}
-          <div className="space-y-8">
+          <div id="students" className="space-y-8">
             {/* Alumni Registration Section */}
             <Card>
               <CardHeader>
