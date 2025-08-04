@@ -91,9 +91,9 @@ export default function HomePage() {
   // Filter events based on search term
   const filterEvents = (eventList: Event[]) => {
     if (!eventSearchTerm) return eventList;
-    
+
     const searchLower = eventSearchTerm.toLowerCase();
-    
+
     switch (eventSearchFilter) {
       case "title":
         return eventList.filter(event => event.title.toLowerCase().includes(searchLower));
@@ -265,83 +265,73 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Our Recruiters Section */}
-      <section className="py-16 bg-slate-50">
+      {/* Company Recruiters Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-50 to-blue-50/30 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-800 mb-4">
-              Our <span className="text-yellow-500">Recruiters</span>
-            </h2>
-            <div className="w-16 h-1 bg-yellow-500 mx-auto mb-8"></div>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">Our <span className="text-yellow-500">Recruiters</span></h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg">
+              Building bridges between talented students and leading companies
+            </p>
           </div>
-          
-          <div className="relative flex items-center justify-center min-h-[500px]">
-            {/* Central Stats */}
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="text-center bg-white rounded-full p-8 shadow-lg border-4 border-blue-100">
-                <div className="mb-4">
-                  <Building2 className="w-12 h-12 text-primary mx-auto mb-2" />
-                  <div className="text-3xl font-bold text-primary">300+</div>
-                  <div className="text-sm text-slate-600">Companies hiring world wide</div>
-                </div>
-                <div className="border-t pt-4">
-                  <div className="text-2xl font-bold text-red-500">15000+</div>
-                  <div className="text-sm text-slate-600">Successful Alumni worldwide</div>
-                </div>
-                <div className="mt-4">
-                  <div className="text-2xl font-bold text-green-600">90%</div>
-                  <div className="text-sm text-slate-600">Placements</div>
-                </div>
-              </div>
-            </div>
 
-            {/* Rotating Company Logos */}
-            <div className="rotating-logos">
-              {/* You can replace these with actual company logo images */}
-              <div className="logo-item logo-1">
-                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-700">Amazon</span>
+          {/* Rotating Company Logos */}
+          <div className="relative flex items-center justify-center">
+            <div className="relative w-96 h-96">
+              {/* Center Statistics */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                <div className="bg-white/90 backdrop-blur-sm rounded-full p-8 shadow-xl border-2 border-blue-100">
+                  <div className="text-center">
+                    <div className="text-blue-600 text-4xl font-bold mb-2">300+</div>
+                    <div className="text-slate-600 text-sm font-medium">Companies hiring world wide</div>
+                  </div>
+                  <div className="text-center mt-4">
+                    <div className="text-red-500 text-3xl font-bold mb-1">15000+</div>
+                    <div className="text-slate-600 text-xs font-medium">Successful Alumni worldwide</div>
+                  </div>
+                  <div className="text-center mt-4">
+                    <div className="text-green-600 text-2xl font-bold mb-1">90%</div>
+                    <div className="text-slate-600 text-xs font-medium">Placements</div>
+                  </div>
                 </div>
               </div>
-              <div className="logo-item logo-2">
-                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-700">Infosys</span>
-                </div>
-              </div>
-              <div className="logo-item logo-3">
-                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-700">Cognizant</span>
-                </div>
-              </div>
-              <div className="logo-item logo-4">
-                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-700">Accenture</span>
-                </div>
-              </div>
-              <div className="logo-item logo-5">
-                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-700">JusPay</span>
-                </div>
-              </div>
-              <div className="logo-item logo-6">
-                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-700">HP</span>
-                </div>
-              </div>
-              <div className="logo-item logo-7">
-                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-700">IBM</span>
-                </div>
-              </div>
-              <div className="logo-item logo-8">
-                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-700">TCS</span>
-                </div>
+
+              {/* Rotating Company Logos */}
+              <div className="absolute inset-0 animate-spin-slow">
+                {/* Company Logo Circles */}
+                {[
+                  { name: 'Accenture', position: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2', color: 'bg-purple-500' },
+                  { name: 'Cognizant', position: 'top-1/4 right-0 translate-x-1/2 -translate-y-1/2', color: 'bg-blue-600' },
+                  { name: 'JusPay', position: 'bottom-1/4 right-0 translate-x-1/2 translate-y-1/2', color: 'bg-blue-700' },
+                  { name: 'HP', position: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2', color: 'bg-blue-500' },
+                  { name: 'IBM', position: 'bottom-1/4 left-0 -translate-x-1/2 translate-y-1/2', color: 'bg-blue-800' },
+                  { name: 'Amazon', position: 'top-1/4 left-0 -translate-x-1/2 -translate-y-1/2', color: 'bg-orange-500' },
+                  { name: 'Informatica', position: 'top-1/2 left-0 -translate-x-1/2 -translate-y-1/2', color: 'bg-red-500' },
+                  { name: 'Cognizant', position: 'top-1/2 right-0 translate-x-1/2 -translate-y-1/2', color: 'bg-blue-600' }
+                ].map((company, index) => (
+                  <div
+                    key={index}
+                    className={`absolute w-20 h-20 ${company.position} transform`}
+                  >
+                    <div className={`w-full h-full ${company.color} rounded-full shadow-lg flex items-center justify-center text-white font-bold text-xs border-4 border-white hover:scale-110 transition-transform duration-300`}>
+                      {company.name}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* Quick Stats */}
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Our Impact</h2>
+              <p className="text-slate-600 max-w-2xl mx-auto">
+                Empowering students with world-class placement opportunities
+              </p>
+            </div>
 
       {/* Main Content Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -862,7 +852,7 @@ export default function HomePage() {
                 Empowering students with quality education and industry-ready skills for a successful career.
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm text-slate-300">
@@ -872,7 +862,7 @@ export default function HomePage() {
                 <li><a href="#news" className="hover:text-white transition-colors">News</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Contact Info</h4>
               <div className="space-y-2 text-sm text-slate-300">
@@ -883,7 +873,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          
+
           <div className="border-t border-slate-700 mt-8 pt-8 text-center">
             <p className="text-slate-300 text-sm">
               © {new Date().getFullYear()} KITS Akshar Institute of Technology. All rights reserved.
