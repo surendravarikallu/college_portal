@@ -265,6 +265,84 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Our Recruiters Section */}
+      <section className="py-16 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-slate-800 mb-4">
+              Our <span className="text-yellow-500">Recruiters</span>
+            </h2>
+            <div className="w-16 h-1 bg-yellow-500 mx-auto mb-8"></div>
+          </div>
+          
+          <div className="relative flex items-center justify-center min-h-[500px]">
+            {/* Central Stats */}
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="text-center bg-white rounded-full p-8 shadow-lg border-4 border-blue-100">
+                <div className="mb-4">
+                  <Building2 className="w-12 h-12 text-primary mx-auto mb-2" />
+                  <div className="text-3xl font-bold text-primary">300+</div>
+                  <div className="text-sm text-slate-600">Companies hiring world wide</div>
+                </div>
+                <div className="border-t pt-4">
+                  <div className="text-2xl font-bold text-red-500">15000+</div>
+                  <div className="text-sm text-slate-600">Successful Alumni worldwide</div>
+                </div>
+                <div className="mt-4">
+                  <div className="text-2xl font-bold text-green-600">90%</div>
+                  <div className="text-sm text-slate-600">Placements</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Rotating Company Logos */}
+            <div className="rotating-logos">
+              {/* You can replace these with actual company logo images */}
+              <div className="logo-item logo-1">
+                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-700">Amazon</span>
+                </div>
+              </div>
+              <div className="logo-item logo-2">
+                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-700">Infosys</span>
+                </div>
+              </div>
+              <div className="logo-item logo-3">
+                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-700">Cognizant</span>
+                </div>
+              </div>
+              <div className="logo-item logo-4">
+                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-700">Accenture</span>
+                </div>
+              </div>
+              <div className="logo-item logo-5">
+                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-700">JusPay</span>
+                </div>
+              </div>
+              <div className="logo-item logo-6">
+                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-700">HP</span>
+                </div>
+              </div>
+              <div className="logo-item logo-7">
+                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-700">IBM</span>
+                </div>
+              </div>
+              <div className="logo-item logo-8">
+                <div className="company-logo bg-white rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-700">TCS</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Main Content Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -765,6 +843,57 @@ export default function HomePage() {
         onOpenChange={setShowAttendanceModal}
         event={selectedEvent}
       />
+
+      {/* Footer with Copyright */}
+      <footer className="bg-slate-800 text-white py-8 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">KITS Akshar</h3>
+                  <p className="text-sm text-slate-300">Institute of Technology</p>
+                </div>
+              </div>
+              <p className="text-slate-300 text-sm">
+                Empowering students with quality education and industry-ready skills for a successful career.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2 text-sm text-slate-300">
+                <li><a href="#home" className="hover:text-white transition-colors">Home</a></li>
+                <li><a href="#events" className="hover:text-white transition-colors">Events</a></li>
+                <li><a href="#alumni" className="hover:text-white transition-colors">Alumni</a></li>
+                <li><a href="#news" className="hover:text-white transition-colors">News</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold mb-4">Contact Info</h4>
+              <div className="space-y-2 text-sm text-slate-300">
+                <p>Training & Placement Cell</p>
+                <p>KITS Akshar Institute of Technology</p>
+                <p>Email: placements@kitsakshar.edu</p>
+                <p>Phone: +91 XXXXX XXXXX</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-slate-700 mt-8 pt-8 text-center">
+            <p className="text-slate-300 text-sm">
+              © {new Date().getFullYear()} KITS Akshar Institute of Technology. All rights reserved.
+            </p>
+            <p className="text-slate-400 text-xs mt-2">
+              Developed by Training & Placement Cell | Autonomous | AICTE Approved | Affiliated to JNTUK
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
