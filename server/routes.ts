@@ -944,7 +944,7 @@ export function registerRoutes(app: Express): Server {
                 studentData[header] = yearValue;
               } else {
                 errors.push(`Row ${i + 2}: Year must be between 1 and 4 (study year)`);
-                continue;
+                // Skip this row by not setting the year value
               }
               break;
             case 'package':
@@ -958,6 +958,12 @@ export function registerRoutes(app: Express): Server {
               break;
           }
         });
+
+        // Validate year field after processing all headers
+        if (studentData.year !== undefined && (studentData.year < 1 || studentData.year > 4)) {
+          errors.push(`Row ${i + 2}: Year must be between 1 and 4 (study year)`);
+          continue;
+        }
 
         try {
           // Validate required fields
