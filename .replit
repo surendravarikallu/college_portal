@@ -11,3 +11,15 @@ run = ["sh", "-c", "npm run dev"]
 localPort = 5000
 externalPort = 5000
 exposeLocalhost = true
+
+[workflows]
+runButton = "Run App"
+
+[[workflows.workflow]]
+name = "Run App"
+author = 45962148
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"

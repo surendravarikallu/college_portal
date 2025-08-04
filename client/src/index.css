@@ -664,3 +664,11 @@
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
 }
+.backdrop-blur-glass {
+    backdrop-filter: blur(10px);
+  }
+
+  .animate-spin-slow {
+    animation: spin 20s linear infinite;
+  }
+}

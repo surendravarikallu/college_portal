@@ -270,58 +270,110 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">Our <span className="text-yellow-500">Recruiters</span></h2>
-            <p className="text-slate-600 max-w-2xl mx-auto text-lg">
-              Building bridges between talented students and leading companies
-            </p>
+            <div className="w-16 h-1 bg-yellow-500 mx-auto mb-8"></div>
           </div>
 
-          {/* Rotating Company Logos */}
-          <div className="relative flex items-center justify-center">
-            <div className="relative w-96 h-96">
+          {/* Hexagonal Company Layout */}
+          <div className="relative flex items-center justify-center min-h-[500px]">
+            <div className="relative w-[600px] h-[500px]">
+              
               {/* Center Statistics */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-                <div className="bg-white/90 backdrop-blur-sm rounded-full p-8 shadow-xl border-2 border-blue-100">
-                  <div className="text-center">
-                    <div className="text-blue-600 text-4xl font-bold mb-2">300+</div>
-                    <div className="text-slate-600 text-sm font-medium">Companies hiring world wide</div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                <div className="bg-white rounded-lg p-6 shadow-lg text-center min-w-[200px]">
+                  <div className="mb-4">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">300+</div>
+                    <div className="text-sm text-slate-600">companies hiring world wide</div>
                   </div>
-                  <div className="text-center mt-4">
-                    <div className="text-red-500 text-3xl font-bold mb-1">15000+</div>
-                    <div className="text-slate-600 text-xs font-medium">Successful Alumni worldwide</div>
+                  <div className="mb-4">
+                    <div className="text-2xl font-bold text-red-500 mb-1">15000+</div>
+                    <div className="text-sm text-slate-600">Successful Alumni worldwide</div>
                   </div>
-                  <div className="text-center mt-4">
-                    <div className="text-green-600 text-2xl font-bold mb-1">90%</div>
-                    <div className="text-slate-600 text-xs font-medium">Placements</div>
+                  <div>
+                    <div className="text-2xl font-bold text-green-600 mb-1">90%</div>
+                    <div className="text-sm text-slate-600">Placements</div>
                   </div>
                 </div>
               </div>
 
-              {/* Rotating Company Logos */}
-              <div className="absolute inset-0 animate-spin-slow">
-                {/* Company Logo Circles */}
-                {[
-                  { name: 'Accenture', position: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2', color: 'bg-purple-500' },
-                  { name: 'Cognizant', position: 'top-1/4 right-0 translate-x-1/2 -translate-y-1/2', color: 'bg-blue-600' },
-                  { name: 'JusPay', position: 'bottom-1/4 right-0 translate-x-1/2 translate-y-1/2', color: 'bg-blue-700' },
-                  { name: 'HP', position: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2', color: 'bg-blue-500' },
-                  { name: 'IBM', position: 'bottom-1/4 left-0 -translate-x-1/2 translate-y-1/2', color: 'bg-blue-800' },
-                  { name: 'Amazon', position: 'top-1/4 left-0 -translate-x-1/2 -translate-y-1/2', color: 'bg-orange-500' },
-                  { name: 'Informatica', position: 'top-1/2 left-0 -translate-x-1/2 -translate-y-1/2', color: 'bg-red-500' },
-                  { name: 'Cognizant', position: 'top-1/2 right-0 translate-x-1/2 -translate-y-1/2', color: 'bg-blue-600' }
-                ].map((company, index) => (
-                  <div
-                    key={index}
-                    className={`absolute w-20 h-20 ${company.position} transform`}
-                  >
-                    <div className={`w-full h-full ${company.color} rounded-full shadow-lg flex items-center justify-center text-white font-bold text-xs border-4 border-white hover:scale-110 transition-transform duration-300`}>
-                      {company.name}
-                    </div>
+              {/* Company Hexagonal Positions */}
+              {/* Top Row */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
+                  <div className="text-center">
+                    <div className="text-blue-600 font-bold text-lg">A</div>
+                    <div className="text-xs text-slate-600">Accenture</div>
                   </div>
-                ))}
+                </div>
               </div>
+
+              {/* Top Right */}
+              <div className="absolute top-16 right-8 transform translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
+                  <div className="text-center">
+                    <div className="text-slate-800 font-bold text-xs">COGNIZANT</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right */}
+              <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
+                  <div className="text-center">
+                    <div className="text-blue-600 font-bold text-lg">JP</div>
+                    <div className="text-xs text-slate-600">JusPay</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Right */}
+              <div className="absolute bottom-16 right-8 transform translate-x-1/2 translate-y-1/2">
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
+                  <div className="text-center">
+                    <div className="text-blue-500 font-bold text-2xl">hp</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom */}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
+                  <div className="text-center">
+                    <div className="text-blue-700 font-bold text-lg">IBM</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Left */}
+              <div className="absolute bottom-16 left-8 transform -translate-x-1/2 translate-y-1/2">
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
+                  <div className="text-center">
+                    <div className="text-slate-800 font-bold text-xs">Cognizant</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Left */}
+              <div className="absolute top-1/2 left-0 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
+                  <div className="text-center">
+                    <div className="text-orange-500 font-bold text-sm">amazon</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Left */}
+              <div className="absolute top-16 left-8 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
+                  <div className="text-center">
+                    <div className="text-red-500 font-bold text-xs">Informatica</div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
         {/* Quick Stats */}
         <section className="py-16 bg-white">
