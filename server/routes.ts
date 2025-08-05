@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import rateLimit from "express-rate-limit";
 import { 
   insertUserSchema, insertNewsSchema, insertEventSchema, insertStudentSchema, 
-  insertAlumniSchema, insertAttendanceSchema, insertHeroNotificationSchema, insertImportantNotificationSchema 
+  insertAlumniSchema, insertAttendanceSchema, insertHeroNotificationSchema, insertImportantNotificationSchema, insertPlacementStuffSchema 
 } from "@shared/schema";
 import { validateFileUpload, validateInput, validateRequest, securityRateLimit } from "./security";
 import { csrfProtection, csrfTokenMiddleware } from "./csrf";
@@ -15,6 +15,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 // Configure multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -252,7 +254,7 @@ export function registerRoutes(app: Express): Server {
       res.json({ message: "Test student created", student });
     } catch (error) {
       console.error("Test student creation error:", error);
-      res.status(500).json({ message: "Test failed", error: error.message });
+      res.status(500).json({ message: "Test failed", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -377,7 +379,26 @@ export function registerRoutes(app: Express): Server {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const students = await storage.getAllStudents();
+      const { department, year } = req.query;
+      let students = await storage.getAllStudents();
+      
+      // Filter by department if provided
+      if (department) {
+        students = students.filter(student => student.branch === department);
+      }
+      
+      // Filter by year if provided
+      if (year) {
+        const yearNum = parseInt(year as string);
+        students = students.filter(student => {
+          // Extract end year from batch format "2020-2024" or "2024"
+          const batchStr = student.batch || '';
+          const match = batchStr.match(/(\d{4})(?:-\d{4})?$/);
+          const batchYear = match ? parseInt(match[1]) : null;
+          return batchYear === yearNum;
+        });
+      }
+      
       res.json(students);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch students" });
@@ -414,7 +435,7 @@ export function registerRoutes(app: Express): Server {
       res.json({ message: "Simple route working", data: studentData });
     } catch (error) {
       console.error("Simple route error:", error);
-      res.status(500).json({ message: "Simple route error", error: error.message });
+      res.status(500).json({ message: "Simple route error", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -884,6 +905,269 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Department-specific placement statistics export
+  app.get("/api/export/placement-stats/:department/:year", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { department, year } = req.params;
+      const yearNum = parseInt(year);
+      
+      if (isNaN(yearNum)) {
+        return res.status(400).json({ message: "Invalid year parameter" });
+      }
+
+      // Get students for the specific department and year
+      const students = await storage.getStudentsByDepartmentAndYear(department, yearNum);
+      
+      // Calculate placement statistics
+      const totalStudents = students.length;
+      const placedStudents = students.filter(s => s.selected).length;
+      const unplacedStudents = totalStudents - placedStudents;
+      const placementRate = totalStudents > 0 ? ((placedStudents / totalStudents) * 100).toFixed(2) : '0';
+      
+      const packages = students
+        .filter(s => s.selected && s.package)
+        .map(s => s.package!)
+        .sort((a, b) => b - a);
+      
+      const avgPackage = packages.length > 0 
+        ? (packages.reduce((sum, pkg) => sum + pkg, 0) / packages.length).toFixed(2)
+        : '0';
+      
+      const highestPackage = packages.length > 0 ? packages[0] : 0;
+      const lowestPackage = packages.length > 0 ? packages[packages.length - 1] : 0;
+
+      // Get company-wise statistics
+      const companyStats = students
+        .filter(s => s.selected && s.companyName)
+        .reduce((acc, student) => {
+          const company = student.companyName!;
+          if (!acc[company]) {
+            acc[company] = { count: 0, packages: [], roles: [] };
+          }
+          acc[company].count++;
+          if (student.package) acc[company].packages.push(student.package);
+          if (student.role) acc[company].roles.push(student.role);
+          return acc;
+        }, {} as Record<string, { count: number; packages: number[]; roles: string[] }>);
+
+      // Get current date and year
+      const currentDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      const currentYear = new Date().getFullYear();
+
+      // Generate professional HTML report content
+      const reportContent = `
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="color: #1f2937; font-size: 28px; margin-bottom: 10px;">${department} Department Placement Statistics Report</h1>
+          <p style="color: #6b7280; font-size: 14px;">Generated on ${currentDate}</p>
+          <p style="color: #6b7280; font-size: 12px;">Academic Year: ${currentYear} | Batch Year: ${year}</p>
+        </div>
+        
+        <div style="margin-bottom: 30px; background-color: #f8fafc; padding: 20px; border-radius: 8px;">
+          <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 20px;">Executive Summary</h2>
+          <p style="color: #4b5563; line-height: 1.8; margin-bottom: 15px;">
+            This comprehensive placement report provides detailed analysis of student placement outcomes for the ${department} department, 
+            including statistical breakdowns, trend analysis, and performance metrics. The report serves as a strategic document 
+            for understanding placement effectiveness and identifying areas for improvement within the department.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+            <div style="background-color: #dbeafe; padding: 15px; border-radius: 6px;">
+              <h3 style="color: #1e40af; margin-bottom: 10px;">Overall Performance</h3>
+              <p style="color: #1e40af; font-size: 14px;">Total Students: <strong>${totalStudents}</strong></p>
+              <p style="color: #1e40af; font-size: 14px;">Placement Rate: <strong>${placementRate}%</strong></p>
+            </div>
+            <div style="background-color: #dcfce7; padding: 15px; border-radius: 6px;">
+              <h3 style="color: #166534; margin-bottom: 10px;">Package Analysis</h3>
+              <p style="color: #166534; font-size: 14px;">Average Package: <strong>₹${avgPackage} LPA</strong></p>
+              <p style="color: #166534; font-size: 14px;">Highest Package: <strong>₹${highestPackage} LPA</strong></p>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Detailed Key Metrics</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
+            <div style="background-color: #fef3c7; padding: 12px; border-radius: 6px;">
+              <h4 style="color: #92400e; margin-bottom: 8px;">Student Distribution</h4>
+              <ul style="color: #92400e; font-size: 13px; line-height: 1.6;">
+                <li>Total Students: ${totalStudents}</li>
+                <li>Placed Students: ${placedStudents}</li>
+                <li>Unplaced Students: ${unplacedStudents}</li>
+                <li>Placement Rate: ${placementRate}%</li>
+              </ul>
+            </div>
+            <div style="background-color: #fce7f3; padding: 12px; border-radius: 6px;">
+              <h4 style="color: #be185d; margin-bottom: 8px;">Package Statistics</h4>
+              <ul style="color: #be185d; font-size: 13px; line-height: 1.6;">
+                <li>Average Package: ₹${avgPackage} LPA</li>
+                <li>Highest Package: ₹${highestPackage} LPA</li>
+                <li>Lowest Package: ₹${lowestPackage} LPA</li>
+                <li>Students with Packages: ${packages.length}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Company-wise Analysis</h2>
+          <p style="color: #6b7280; margin-bottom: 15px; font-size: 14px;">
+            Detailed breakdown of placement performance by companies, showing total students placed, 
+            average packages, and roles offered for each company.
+          </p>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+            <thead>
+              <tr style="background-color: #f3f4f6;">
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">Company</th>
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Students Placed</th>
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Avg Package</th>
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Top Roles</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(companyStats).map(([company, stats]) => {
+                const avgPackage = stats.packages.length > 0 ? (stats.packages.reduce((sum, pkg) => sum + pkg, 0) / stats.packages.length).toFixed(1) : 'N/A';
+                const topRoles = Array.from(new Set(stats.roles)).slice(0, 3).join(', ') || 'N/A';
+                return `
+                  <tr>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500;">${company}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.count}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">₹${avgPackage} LPA</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${topRoles}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Student Details</h2>
+          <p style="color: #6b7280; margin-bottom: 15px; font-size: 14px;">
+            Complete list of students with their placement status, company details, and package information.
+          </p>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+            <thead>
+              <tr style="background-color: #f3f4f6;">
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">Name</th>
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">Roll Number</th>
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Status</th>
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Company</th>
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Package</th>
+                <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${students.map(student => {
+                const status = student.selected ? 'Placed' : 'Not Placed';
+                const statusColor = student.selected ? '#059669' : '#dc2626';
+                const company = student.selected ? (student.companyName || 'N/A') : 'N/A';
+                const packageAmount = student.selected ? (student.package ? `₹${student.package} LPA` : 'N/A') : 'N/A';
+                const role = student.selected ? (student.role || 'N/A') : 'N/A';
+                return `
+                  <tr>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500;">${student.name}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px;">${student.rollNumber}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center; color: ${statusColor}; font-weight: 500;">${status}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${company}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${packageAmount}</td>
+                    <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${role}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="margin-bottom: 30px; background-color: #fef2f2; padding: 20px; border-radius: 8px;">
+          <h2 style="color: #991b1b; border-bottom: 2px solid #fecaca; padding-bottom: 10px;">Recommendations & Insights</h2>
+          <div style="color: #7f1d1d; line-height: 1.8;">
+            <h3 style="margin-bottom: 10px;">Key Insights:</h3>
+            <ul style="margin-bottom: 15px;">
+              <li>Department placement rate of ${placementRate}% indicates ${parseFloat(placementRate) >= 80 ? 'excellent' : parseFloat(placementRate) >= 60 ? 'good' : parseFloat(placementRate) >= 40 ? 'moderate' : 'room for improvement'} performance</li>
+              <li>Average package of ₹${avgPackage} LPA reflects the market value of ${department} graduates</li>
+              <li>${Object.keys(companyStats).length} companies participated in the placement process for ${department}</li>
+              <li>${unplacedStudents} students require additional support and career guidance</li>
+            </ul>
+            <h3 style="margin-bottom: 10px;">Strategic Recommendations:</h3>
+            <ul>
+              <li>Focus on skill development programs to improve placement rates</li>
+              <li>Strengthen industry partnerships to increase company participation</li>
+              <li>Enhance career counseling initiatives for unplaced students</li>
+              <li>Implement targeted training programs based on market demands</li>
+            </ul>
+          </div>
+        </div>
+      `;
+
+      // Generate PDF using html2canvas and jsPDF (same as export functions)
+      try {
+        const reportDiv = document.createElement('div');
+        reportDiv.style.position = 'absolute';
+        reportDiv.style.left = '-9999px';
+        reportDiv.style.top = '0';
+        reportDiv.style.width = '210mm';
+        reportDiv.style.padding = '20mm';
+        reportDiv.style.backgroundColor = '#ffffff';
+        reportDiv.style.fontFamily = 'Arial, sans-serif';
+        reportDiv.style.fontSize = '12px';
+        reportDiv.style.lineHeight = '1.4';
+        reportDiv.innerHTML = reportContent;
+        
+        document.body.appendChild(reportDiv);
+        
+        const canvas = await html2canvas(reportDiv, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        });
+        
+        document.body.removeChild(reportDiv);
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgWidth = 210;
+        const pageHeight = 295;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        
+        let position = 0;
+        
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        // Set response headers
+        res.setHeader('Content-Disposition', `attachment; filename="${department}_placement_report_${year}.pdf"`);
+        res.setHeader('Content-Type', 'application/pdf');
+        
+        // Send PDF buffer
+        const pdfBuffer = pdf.output('arraybuffer');
+        res.send(Buffer.from(pdfBuffer));
+        
+      } catch (pdfError) {
+        console.error('PDF generation error:', pdfError);
+        res.status(500).json({ 
+          message: "Failed to generate PDF", 
+          error: pdfError instanceof Error ? pdfError.message : 'Unknown error'
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to export placement statistics" });
+    }
+  });
+
   // Import routes
   app.post("/api/import/students", upload.single('file'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -1218,6 +1502,131 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ success: false, message: "Failed to import attendance", imported: 0, errors: [errorMessage] });
     }
   });
+
+  // Placement Stuff API Routes
+  app.get("/api/placement-stuff", async (req, res) => {
+    try {
+      const placementStuff = await storage.getAllPlacementStuff();
+      res.json(placementStuff);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch placement stuff" });
+    }
+  });
+
+  app.post("/api/placement-stuff", 
+    apiLimiter,
+    requireRole(['admin', 'tpo']),
+    validateRequest,
+    auditLog('CREATE', 'PLACEMENT_STUFF'),
+    async (req, res) => {
+      try {
+        const validatedData = insertPlacementStuffSchema.parse(req.body);
+        const placementStuff = await storage.createPlacementStuff(validatedData);
+        res.status(201).json(placementStuff);
+      } catch (error) {
+        if (error instanceof Error) {
+          res.status(400).json({ message: error.message });
+        } else {
+          res.status(500).json({ message: "Failed to create placement stuff" });
+        }
+      }
+    }
+  );
+
+  app.put("/api/placement-stuff/:id", 
+    apiLimiter,
+    requireRole(['admin', 'tpo']),
+    validateRequest,
+    auditLog('UPDATE', 'PLACEMENT_STUFF'),
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({ message: "Invalid ID" });
+        }
+        
+        const validatedData = insertPlacementStuffSchema.parse(req.body);
+        const placementStuff = await storage.updatePlacementStuff(id, validatedData);
+        
+        if (!placementStuff) {
+          return res.status(404).json({ message: "Placement stuff not found" });
+        }
+        
+        res.json(placementStuff);
+      } catch (error) {
+        if (error instanceof Error) {
+          res.status(400).json({ message: error.message });
+        } else {
+          res.status(500).json({ message: "Failed to update placement stuff" });
+        }
+      }
+    }
+  );
+
+  app.delete("/api/placement-stuff/:id", 
+    apiLimiter,
+    requireRole(['admin', 'tpo']),
+    auditLog('DELETE', 'PLACEMENT_STUFF'),
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({ message: "Invalid ID" });
+        }
+        
+        const success = await storage.deletePlacementStuff(id);
+        
+        if (!success) {
+          return res.status(404).json({ message: "Placement stuff not found" });
+        }
+        
+        res.json({ message: "Placement stuff deleted successfully" });
+      } catch (error) {
+        res.status(500).json({ message: "Failed to delete placement stuff" });
+      }
+    }
+  );
+
+  // File upload endpoint for PDFs
+  app.post("/api/upload/pdf", 
+    upload.single('file'),
+    requireRole(['admin', 'tpo']),
+    auditLog('UPLOAD', 'PDF_FILE'),
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        // Check if file is PDF
+        const fileExtension = path.extname(req.file.originalname).toLowerCase();
+        if (fileExtension !== '.pdf') {
+          return res.status(400).json({ message: "Only PDF files are allowed" });
+        }
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const filename = `placement_${timestamp}_${req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const filePath = path.join(uploadDir, filename);
+
+        // Write file to uploads directory
+        fs.writeFileSync(filePath, req.file.buffer);
+
+        // Return the web-accessible URL
+        const fileUrl = `/uploads/${filename}`;
+        
+        res.json({ 
+          success: true, 
+          message: "PDF uploaded successfully",
+          fileUrl: fileUrl,
+          filename: filename
+        });
+      } catch (error) {
+        console.error('File upload error:', error);
+        res.status(500).json({ message: "Failed to upload PDF file" });
+      }
+    }
+  );
 
   const httpServer = createServer(app);
   return httpServer;

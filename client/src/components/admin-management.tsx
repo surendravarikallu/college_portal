@@ -94,13 +94,13 @@ export default function AdminManagement() {
 
   const handleCreateAdmin = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("=== Frontend: Sending admin data ===");
-    console.log("Form data:", formData);
     createAdminMutation.mutate(formData);
   };
 
   const handleDeleteAdmin = (id: number) => {
-    deleteAdminMutation.mutate(id);
+    if (confirm("Are you sure you want to delete this admin?")) {
+      deleteAdminMutation.mutate(id);
+    }
   };
 
   return (
@@ -180,6 +180,7 @@ export default function AdminManagement() {
                 </Button>
                 <Button
                   type="submit"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                   disabled={createAdminMutation.isPending}
                 >
                   {createAdminMutation.isPending ? "Creating..." : "Create Admin"}
@@ -197,7 +198,7 @@ export default function AdminManagement() {
             Current Administrators
           </CardTitle>
           <CardDescription>
-            Manage existing administrator accounts and their permissions
+            Manage TPO administrators and their access levels
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -214,7 +215,7 @@ export default function AdminManagement() {
                   <TableHead>Username</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -223,22 +224,22 @@ export default function AdminManagement() {
                     <TableCell className="font-medium">{admin.name}</TableCell>
                     <TableCell>{admin.username}</TableCell>
                     <TableCell>
-                      <Badge variant={admin.role === "tpo" ? "default" : "secondary"}>
-                        {admin.role === "tpo" ? "TPO Admin" : "System Admin"}
+                      <Badge variant={admin.role === 'admin' ? 'default' : 'secondary'}>
+                        {admin.role === 'admin' ? 'System Admin' : 'TPO Admin'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {new Date(admin.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button
-                            variant="ghost"
                             size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            variant="outline"
+                            className="text-red-600 border-red-300 hover:bg-red-50"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -262,6 +263,17 @@ export default function AdminManagement() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {admins.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <div className="text-slate-500">
+                        <Users className="w-12 h-12 mx-auto mb-2 text-slate-300" />
+                        <p>No administrators found</p>
+                        <p className="text-sm">Create your first administrator to get started</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           )}

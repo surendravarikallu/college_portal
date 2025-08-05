@@ -6,7 +6,8 @@ import {
   type Student, type InsertStudent,
   type Alumni, type InsertAlumni,
   type Attendance, type InsertAttendance,
-  heroNotifications, importantNotifications, type HeroNotification, type InsertHeroNotification, type ImportantNotification, type InsertImportantNotification
+  heroNotifications, importantNotifications, type HeroNotification, type InsertHeroNotification, type ImportantNotification, type InsertImportantNotification,
+  placementStuff, type PlacementStuff, type InsertPlacementStuff
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, asc } from "drizzle-orm";
@@ -76,6 +77,13 @@ export interface IStorage {
   createImportantNotification(data: InsertImportantNotification): Promise<ImportantNotification>;
   updateImportantNotification(id: number, data: Partial<InsertImportantNotification>): Promise<ImportantNotification | undefined>;
   deleteImportantNotification(id: number): Promise<boolean>;
+
+  // Placement Stuff CRUD
+  getAllPlacementStuff(): Promise<PlacementStuff[]>;
+  getPlacementStuffById(id: number): Promise<PlacementStuff | undefined>;
+  createPlacementStuff(data: InsertPlacementStuff): Promise<PlacementStuff>;
+  updatePlacementStuff(id: number, data: Partial<InsertPlacementStuff>): Promise<PlacementStuff | undefined>;
+  deletePlacementStuff(id: number): Promise<boolean>;
 
   sessionStore: any;
 }
@@ -404,6 +412,27 @@ export class DatabaseStorage implements IStorage {
   }
   async deleteImportantNotification(id: number): Promise<boolean> {
     const result = await db.delete(importantNotifications).where(eq(importantNotifications.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Placement Stuff CRUD
+  async getAllPlacementStuff(): Promise<PlacementStuff[]> {
+    return await db.select().from(placementStuff).orderBy(desc(placementStuff.createdAt));
+  }
+  async getPlacementStuffById(id: number): Promise<PlacementStuff | undefined> {
+    const [item] = await db.select().from(placementStuff).where(eq(placementStuff.id, id));
+    return item || undefined;
+  }
+  async createPlacementStuff(data: InsertPlacementStuff): Promise<PlacementStuff> {
+    const [item] = await db.insert(placementStuff).values(data).returning();
+    return item;
+  }
+  async updatePlacementStuff(id: number, data: Partial<InsertPlacementStuff>): Promise<PlacementStuff | undefined> {
+    const [item] = await db.update(placementStuff).set({ ...data, updatedAt: new Date() }).where(eq(placementStuff.id, id)).returning();
+    return item || undefined;
+  }
+  async deletePlacementStuff(id: number): Promise<boolean> {
+    const result = await db.delete(placementStuff).where(eq(placementStuff.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

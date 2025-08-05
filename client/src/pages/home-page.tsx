@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,15 @@ interface PlacementRecord {
   role: string;
 }
 
+interface PlacementStuff {
+  id: number;
+  title: string;
+  description: string;
+  link?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function HomePage() {
   const [showAlumniModal, setShowAlumniModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
@@ -39,6 +48,37 @@ export default function HomePage() {
   });
   const [eventSearchTerm, setEventSearchTerm] = useState("");
   const [eventSearchFilter, setEventSearchFilter] = useState<"all" | "title" | "company" | "description">("all");
+
+  // Test image loading
+  useEffect(() => {
+    const testImages = [
+      '/attached_assets/TCS.png',
+      '/attached_assets/Infosys.png',
+      '/attached_assets/Tech mahindra.png',
+      '/attached_assets/Deloittle.png',
+      '/attached_assets/CGI.png',
+      '/attached_assets/Amara Raja.jpg',
+      '/attached_assets/CSS.png',
+      '/attached_assets/Winware.png'
+    ];
+
+    testImages.forEach((src, index) => {
+      const img = new Image();
+      img.onload = () => {
+        console.log(`✅ Logo ${index + 1} loaded successfully:`, src);
+      };
+      img.onerror = () => {
+        console.error(`❌ Failed to load logo ${index + 1}:`, src);
+      };
+      img.src = src;
+    });
+  }, []);
+
+  // Helper function to detect PDF files
+  const isPDFLink = (url: string | undefined): boolean => {
+    if (!url) return false;
+    return url.toLowerCase().endsWith('.pdf') || url.toLowerCase().includes('.pdf');
+  };
 
   const toggleSection = (section: 'ongoing' | 'upcoming' | 'past') => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -76,6 +116,19 @@ export default function HomePage() {
       const response = await fetch("/api/important-notifications");
       if (!response.ok) {
         throw new Error("Failed to fetch important notifications");
+      }
+      return response.json();
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+  });
+
+  const { data: placementStuff = [] } = useQuery<PlacementStuff[]>({
+    queryKey: ["/api/placement-stuff"],
+    queryFn: async () => {
+      const response = await fetch("/api/placement-stuff");
+      if (!response.ok) {
+        throw new Error("Failed to fetch placement stuff");
       }
       return response.json();
     },
@@ -200,20 +253,40 @@ export default function HomePage() {
       icon: Briefcase
     },
     {
-      title: "Resume Building Workshop",
-      description: "Join our expert-led resume building session on 28th Jan 2025",
+      title: "Industry Expert Session",
+      description: "Join our industry expert session on latest tech trends on 30th Jan 2025",
       type: "NEW",
       color: "green",
-      link: "/workshops/resume-building",
+      link: "/sessions/industry-expert",
       icon: Star
     },
     {
-      title: "Mock Interview Sessions",
-      description: "Practice interviews with industry professionals. Book your slot now",
+      title: "Coding Competition",
+      description: "Annual coding competition registration is now open. Prizes worth ₹50,000",
       type: "INFO",
       color: "blue",
+      link: "/competitions/coding",
+      icon: Trophy
+    }
+  ];
+
+  // Default placement stuff to show if no placement stuff is available
+  const defaultPlacementStuff = [
+    {
+      id: 1,
+      title: "Resume Building Workshop",
+      description: "Join our expert-led resume building session to create professional resumes that stand out to recruiters. Learn industry best practices and get your resume reviewed by professionals.",
+      link: "/workshops/resume-building",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 2,
+      title: "Mock Interview Sessions",
+      description: "Practice interviews with industry professionals and get real-time feedback. Book your slot for technical and HR interview practice sessions.",
       link: "/interviews/mock",
-      icon: Info
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
   ];
 
@@ -254,134 +327,23 @@ export default function HomePage() {
       <section id="home" className="bg-gradient-to-r from-primary to-primary/80 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg" style={{textShadow: '0 2px 8px rgba(0,0,0,0.18)'}}>KITS Akshar Institute of Technology</h1>
-            <p className="text-xl text-blue-100 mb-4 max-w-3xl mx-auto drop-shadow" style={{textShadow: '0 2px 8px rgba(0,0,0,0.18)'}}>
-              T&P CELL Portal
+            <div className="mb-6">
+              <img 
+                src={collegeHeaderImg} 
+                alt="KITS Akshar Institute of Technology" 
+                className="max-w-full h-auto mx-auto"
+                style={{ maxHeight: '200px' }}
+              />
+            </div>
+            <p className="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg" style={{textShadow: '0 2px 8px rgba(0,0,0,0.18)'}}>
+              Training & Placement Cell Portal
             </p>
-            <p className="text-lg text-blue-200 mb-8 max-w-3xl mx-auto drop-shadow" style={{textShadow: '0 2px 8px rgba(0,0,0,0.18)'}}>
+            <p className="text-xl text-blue-100 mb-4 max-w-3xl mx-auto drop-shadow" style={{textShadow: '0 2px 8px rgba(0,0,0,0.18)'}}>
               Empowering students with industry connections and career opportunities | Autonomous | AICTE Approved | Affiliated to JNTUK
             </p>
           </div>
         </div>
       </section>
-
-      {/* Our Recruiters Section */}
-        <section className="py-16 bg-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold text-slate-800 mb-2">
-              Our <span className="text-orange-500">Recruiters</span>
-            </h2>
-            <div className="w-16 h-0.5 bg-orange-500 mx-auto mb-12"></div>
-
-            {/* Hexagonal Recruiter Layout */}
-            <div className="relative flex items-center justify-center min-h-[500px]">
-              <div className="relative w-[600px] h-[500px]">
-
-                {/* Center Statistics */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                  <div className="bg-white rounded-lg p-6 shadow-lg text-center min-w-[200px]">
-                    <div className="mb-4">
-                      <div className="text-3xl font-bold text-blue-600 mb-1">300+</div>
-                      <div className="text-sm text-slate-600">companies hiring world wide</div>
-                    </div>
-                    <div className="mb-4">
-                      <div className="text-2xl font-bold text-red-500 mb-1">15000+</div>
-                      <div className="text-sm text-slate-600">Successful Alumni worldwide</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-green-600 mb-1">90%</div>
-                      <div className="text-sm text-slate-600">Placements</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Company Hexagonal Positions */}
-                {/* Top - Accenture */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
-                    <div className="text-center">
-                      <div className="text-blue-600 font-bold text-lg">A</div>
-                      <div className="text-xs text-slate-600">ACCENTURE</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Top Right - Cognizant */}
-                <div className="absolute top-16 right-8 transform translate-x-1/2 -translate-y-1/2">
-                  <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
-                    <div className="text-center">
-                      <div className="text-slate-800 font-bold text-xs">COGNIZANT</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right - JusPay */}
-                <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
-                  <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
-                    <div className="text-center">
-                      <div className="text-blue-600 font-bold text-sm">JUSPAY</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Right - HP */}
-                <div className="absolute bottom-16 right-8 transform translate-x-1/2 translate-y-1/2">
-                  <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
-                    <div className="text-center">
-                      <div className="text-blue-500 font-bold text-2xl">hp</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom - IBM */}
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-                  <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
-                    <div className="text-center">
-                      <div className="text-blue-700 font-bold text-lg">IBM</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Left - Cognizant */}
-                <div className="absolute bottom-16 left-8 transform -translate-x-1/2 translate-y-1/2">
-                  <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
-                    <div className="text-center">
-                      <div className="text-slate-800 font-bold text-xs">Cognizant</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Left - Amazon */}
-                <div className="absolute top-1/2 left-0 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
-                    <div className="text-center">
-                      <div className="text-orange-500 font-bold text-sm">amazon</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Top Left - Informatica */}
-                <div className="absolute top-16 left-8 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center border border-slate-200 hover:shadow-xl transition-shadow">
-                    <div className="text-center">
-                      <div className="text-red-500 font-bold text-xs">informatica</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Quick Stats */}
-        <section className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Our Impact</h2>
-              <p className="text-slate-600 max-w-2xl mx-auto">
-                Empowering students with world-class placement opportunities
-              </p>
-            </div>
 
       {/* Main Content Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -451,84 +413,191 @@ export default function HomePage() {
                 </CardContent>
               </Card>
 
-              {/* Notifications Section */}
+              {/* Placement Stuff Section */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Briefcase className="w-5 h-5 text-orange-600 mr-3" />
-                    Important Notifications
+                    <Briefcase className="w-5 h-5 text-green-600 mr-3" />
+                    Placement Stuff
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {importantNotifications.length === 0 ? (
-                      <div className="space-y-3">
-                        {defaultNotifications.map((note, idx) => {
-                          const Icon = note.icon;
-                          const NotificationContent = (
-                            <div className="flex items-center p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer">
-                              <Icon className="w-5 h-5 text-orange-500 mr-3" />
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-slate-800 text-sm">{note.title}</h3>
-                                <p className="text-slate-600 text-xs mt-1">{note.description}</p>
+                    {placementStuff.length === 0 ? (
+                      <div className="space-y-4">
+                        {defaultPlacementStuff.map((item) => (
+                          <a 
+                            key={item.id} 
+                            href={item.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="block group hover:bg-slate-50 rounded-lg p-3 transition-colors border border-slate-200 hover:border-green-500/20"
+                          >
+                            <div className="flex items-start space-x-3">
+                              <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-slate-800 group-hover:text-green-600 transition-colors line-clamp-2">
+                                  {item.title}
+                                </h3>
+                                <p className="text-slate-600 text-sm mt-1 line-clamp-3">
+                                  {item.description}
+                                </p>
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="text-xs text-slate-500 flex items-center">
+                                    <Calendar className="w-3 h-3 mr-1" />
+                                    {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric'
+                                    })}
+                                  </span>
+                                  <span className="inline-flex items-center text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                    <ExternalLink className="w-3 h-3 mr-1" />
+                                    Link
+                                  </span>
+                                </div>
                               </div>
-                              <Badge className="text-xs bg-orange-500 text-white">{note.type}</Badge>
                             </div>
-                          );
-
-                          return note.link ? (
-                            <a 
-                              key={idx} 
-                              href={note.link} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="block"
-                            >
-                              {NotificationContent}
-                            </a>
-                          ) : (
-                            <div key={idx}>
-                              {NotificationContent}
-                            </div>
-                          );
-                        })}
+                          </a>
+                        ))}
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        {importantNotifications.map((notification) => {
-                          const NotificationContent = (
-                            <div className="flex items-center p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors">
-                              <AlertCircle className="w-5 h-5 text-orange-500 mr-3" />
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-slate-800 text-sm">{notification.title}</h3>
-                                <p className="text-slate-600 text-xs mt-1">{notification.type}</p>
+                      placementStuff.slice(0, 4).map((item) => (
+                        <a 
+                          key={item.id} 
+                          href={item.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block group hover:bg-slate-50 rounded-lg p-3 transition-colors border border-slate-200 hover:border-green-500/20"
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-slate-800 group-hover:text-green-600 transition-colors line-clamp-2">
+                                {item.title}
+                              </h3>
+                              <p className="text-slate-600 text-sm mt-1 line-clamp-3">
+                                {item.description.length > 120 
+                                  ? `${item.description.substring(0, 120)}...` 
+                                  : item.description}
+                              </p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-xs text-slate-500 flex items-center">
+                                  <Calendar className="w-3 h-3 mr-1" />
+                                  {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })}
+                                </span>
+                                <span className="inline-flex items-center text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                  {item.link && isPDFLink(item.link) ? (
+                                    <>
+                                      <FileText className="w-3 h-3 mr-1" />
+                                      PDF
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ExternalLink className="w-3 h-3 mr-1" />
+                                      Link
+                                    </>
+                                  )}
+                                </span>
                               </div>
-                              <Badge className="text-xs bg-orange-500 text-white">{notification.type}</Badge>
                             </div>
-                          );
-
-                          return notification.link ? (
-                            <a 
-                              key={notification.id} 
-                              href={notification.link} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="block cursor-pointer"
-                            >
-                              {NotificationContent}
-                            </a>
-                          ) : (
-                            <div key={notification.id}>
-                              {NotificationContent}
-                            </div>
-                          );
-                        })}
+                          </div>
+                        </a>
+                      ))
+                    )}
+                    {placementStuff.length > 4 && (
+                      <div className="text-center pt-2">
+                        <p className="text-sm text-slate-500">
+                          +{placementStuff.length - 4} more placement items
+                        </p>
                       </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Notifications Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Briefcase className="w-5 h-5 text-orange-600 mr-3" />
+                  Important Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {importantNotifications.length === 0 ? (
+                    <div className="space-y-3">
+                      {defaultNotifications.map((note, idx) => {
+                        const Icon = note.icon;
+                        const NotificationContent = (
+                          <div className="flex items-center p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer">
+                            <Icon className="w-5 h-5 text-orange-500 mr-3" />
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-slate-800 text-sm">{note.title}</h3>
+                              <p className="text-slate-600 text-xs mt-1">{note.description}</p>
+                            </div>
+                            <Badge className="text-xs bg-orange-500 text-white">{note.type}</Badge>
+                          </div>
+                        );
+
+                        return note.link ? (
+                          <a 
+                            key={idx} 
+                            href={note.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="block"
+                          >
+                            {NotificationContent}
+                          </a>
+                        ) : (
+                          <div key={idx}>
+                            {NotificationContent}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {importantNotifications.map((notification) => {
+                        const NotificationContent = (
+                          <div className="flex items-center p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors">
+                            <AlertCircle className="w-5 h-5 text-orange-500 mr-3" />
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-slate-800 text-sm">{notification.title}</h3>
+                              <p className="text-slate-600 text-xs mt-1">{notification.type}</p>
+                            </div>
+                            <Badge className="text-xs bg-orange-500 text-white">{notification.type}</Badge>
+                          </div>
+                        );
+
+                        return notification.link ? (
+                          <a 
+                            key={notification.id} 
+                            href={notification.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="block cursor-pointer"
+                          >
+                            {NotificationContent}
+                          </a>
+                        ) : (
+                          <div key={notification.id}>
+                            {NotificationContent}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Events Section */}
             <Card id="events">
@@ -873,6 +942,161 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Our Recruiters Section  */}
+      <section className="py-16 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold text-slate-800 mb-2">
+            Our <span className="text-orange-500">Recruiters</span>
+          </h2>
+          <div className="w-16 h-0.5 bg-orange-500 mx-auto mb-16"></div>
+
+          {/* Semi-circular Recruiter Layout */}
+          <div className="relative flex items-center justify-center min-h-[500px] lg:min-h-[600px]">
+            <div className="relative w-[500px] h-[500px] lg:w-[700px] lg:h-[600px]">
+              
+              {/* Center Statistics */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                <div className="bg-white rounded-lg p-4 lg:p-6 shadow-lg text-center min-w-[160px] lg:min-w-[200px]">
+                  <div className="mb-3 lg:mb-4">
+                    <div className="text-2xl lg:text-3xl font-bold text-blue-600 mb-1">300+</div>
+                    <div className="text-xs lg:text-sm text-slate-600">companies hiring world wide</div>
+                  </div>
+                  <div className="mb-3 lg:mb-4">
+                    <div className="text-xl lg:text-2xl font-bold text-red-500 mb-1">15000+</div>
+                    <div className="text-xs lg:text-sm text-slate-600">Successful Alumni worldwide</div>
+                  </div>
+                  <div>
+                    <div className="text-xl lg:text-2xl font-bold text-green-600 mb-1">90%</div>
+                    <div className="text-xs lg:text-sm text-slate-600">Placements</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Company Logo Positions - Circular arrangement for 8 logos */}
+              {/* Top - TCS */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden hover:scale-110">
+                  <img 
+                    src="/attached_assets/TCS.png" 
+                    alt="TCS" 
+                    className="w-20 h-20 lg:w-28 lg:h-28 object-contain p-2"
+                    onError={(e) => {
+                      console.error('Failed to load TCS logo');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Top Right - Infosys */}
+              <div className="absolute top-8 right-8 lg:top-12 lg:right-12 transform translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden hover:scale-110">
+                  <img 
+                    src="/attached_assets/Infosys.png" 
+                    alt="Infosys" 
+                    className="w-20 h-20 lg:w-28 lg:h-28 object-contain p-2"
+                    onError={(e) => {
+                      console.error('Failed to load Infosys logo');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Right - Tech Mahindra */}
+              <div className="absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden hover:scale-110">
+                  <img 
+                    src="/attached_assets/Tech mahindra.png" 
+                    alt="Tech Mahindra" 
+                    className="w-20 h-20 lg:w-28 lg:h-28 object-contain p-2"
+                    onError={(e) => {
+                      console.error('Failed to load Tech Mahindra logo');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Bottom Right - Deloitte */}
+              <div className="absolute bottom-8 right-8 lg:bottom-12 lg:right-12 transform translate-x-1/2 translate-y-1/2">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden hover:scale-110">
+                  <img 
+                    src="/attached_assets/Deloittle.png" 
+                    alt="Deloitte" 
+                    className="w-20 h-20 lg:w-28 lg:h-28 object-contain p-2"
+                    onError={(e) => {
+                      console.error('Failed to load Deloitte logo');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Bottom - CGI */}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden hover:scale-110">
+                  <img 
+                    src="/attached_assets/CGI.png" 
+                    alt="CGI" 
+                    className="w-20 h-20 lg:w-28 lg:h-28 object-contain p-2"
+                    onError={(e) => {
+                      console.error('Failed to load CGI logo');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Bottom Left - Amara Raja */}
+              <div className="absolute bottom-8 left-8 lg:bottom-12 lg:left-12 transform -translate-x-1/2 translate-y-1/2">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden hover:scale-110">
+                  <img 
+                    src="/attached_assets/Amara Raja.jpg" 
+                    alt="Amara Raja" 
+                    className="w-24 h-24 lg:w-32 lg:h-32 object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load Amara Raja logo');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Left - CSS */}
+              <div className="absolute top-1/2 left-0 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden hover:scale-110">
+                  <img 
+                    src="/attached_assets/CSS.png" 
+                    alt="CSS" 
+                    className="w-20 h-20 lg:w-28 lg:h-28 object-contain p-2"
+                    onError={(e) => {
+                      console.error('Failed to load CSS logo');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Top Left - Winware */}
+              <div className="absolute top-8 left-8 lg:top-12 lg:left-12 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden hover:scale-110">
+                  <img 
+                    src="/attached_assets/Winware.png" 
+                    alt="Winware" 
+                    className="w-20 h-20 lg:w-28 lg:h-28 object-contain p-2"
+                    onError={(e) => {
+                      console.error('Failed to load Winware logo');
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Modals */}
       <AlumniRegistrationModal 
         open={showAlumniModal} 
@@ -929,7 +1153,7 @@ export default function HomePage() {
               © {new Date().getFullYear()} KITS Akshar Institute of Technology. All rights reserved.
             </p>
             <p className="text-slate-400 text-xs mt-2">
-              Developed by Training & Placement Cell | Autonomous | AICTE Approved | Affiliated to JNTUK
+              Developed by Varikallu Surendra (23JK1AO5I7) |Training & Placement Cell | Autonomous | AICTE Approved | Affiliated to JNTUK
             </p>
           </div>
         </div>

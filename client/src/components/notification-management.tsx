@@ -160,27 +160,30 @@ export function NotificationManagement() {
     }
   };
 
-  // Default notifications to show when database is empty (same as landing page)
+  // Default notifications to show when database is empty (matching home page exactly)
   const defaultNotifications = [
     {
       id: -1,
       title: "Placement Registration Open",
+      description: "Students can now register for upcoming placement drives. Last date: 31st Jan 2025",
       type: "URGENT",
       link: "/placements/register",
       createdAt: new Date().toISOString()
     },
     {
       id: -2,
-      title: "Resume Building Workshop",
-      type: "NEW", 
-      link: "/workshops/resume-building",
+      title: "Industry Expert Session",
+      description: "Join our industry expert session on latest tech trends on 30th Jan 2025",
+      type: "NEW",
+      link: "/sessions/industry-expert",
       createdAt: new Date().toISOString()
     },
     {
       id: -3,
-      title: "Mock Interview Sessions",
+      title: "Coding Competition",
+      description: "Annual coding competition registration is now open. Prizes worth ₹50,000",
       type: "INFO",
-      link: "/interviews/mock",
+      link: "/competitions/coding",
       createdAt: new Date().toISOString()
     }
   ];

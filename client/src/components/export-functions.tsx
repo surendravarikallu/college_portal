@@ -25,6 +25,7 @@ interface Student {
   companyName?: string;
   role?: string;
   gender?: string;
+  rollNumber?: string;
 }
 
 interface DeptStats {
@@ -54,6 +55,7 @@ interface Event {
   status: string;
   startDate?: string;
   endDate?: string;
+  company?: string;
 }
 
 interface YearStats {
@@ -75,6 +77,7 @@ interface Alumni {
   company?: string;
   position?: string;
   package?: number;
+  passOutYear?: number;
 }
 
 export function ExportFunctions() {
@@ -191,10 +194,14 @@ export function ExportFunctions() {
       reportDiv.style.position = 'absolute';
       reportDiv.style.left = '-9999px';
       reportDiv.style.top = '0';
-      reportDiv.style.width = '800px';
-      reportDiv.style.padding = '20px';
+      reportDiv.style.width = '1200px'; // Increased width for better scaling
+      reportDiv.style.padding = '40px';
       reportDiv.style.backgroundColor = 'white';
-      reportDiv.style.fontFamily = 'Arial, sans-serif';
+      reportDiv.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      reportDiv.style.fontSize = '14px'; // Base font size
+      reportDiv.style.lineHeight = '1.4';
+      reportDiv.style.color = '#000000';
+      reportDiv.style.boxSizing = 'border-box';
       
       const currentDate = new Date().toLocaleDateString();
       const currentYear = new Date().getFullYear();
@@ -310,14 +317,14 @@ export function ExportFunctions() {
         if (!e.startDate) return false;
         return new Date(e.startDate) > new Date();
       }).length;
-      const uniqueCompanies = [...new Set(events.map(e => e.company).filter(Boolean))].length;
+      const uniqueCompanies = Array.from(new Set(events.map(e => e.company).filter(Boolean))).length;
       
       // Alumni analysis
       const totalAlumni = alumni.length;
-      const alumniByYear = alumni.reduce((acc, a) => {
+      const alumniByYear = alumni.reduce((acc: { [key: number]: number }, a) => {
         const year = a.passOutYear;
-        if (!acc[year]) acc[year] = 0;
-        acc[year]++;
+        if (year && !acc[year]) acc[year] = 0;
+        if (year) acc[year]++;
         return acc;
       }, {});
       
@@ -325,98 +332,671 @@ export function ExportFunctions() {
       let reportContent = '';
       let title = '';
       
+      // Enhanced styling variables
+      const primaryColor = '#1e40af';
+      const secondaryColor = '#059669';
+      const accentColor = '#f59e0b';
+      const dangerColor = '#dc2626';
+      const successColor = '#10b981';
+      const warningColor = '#f59e0b';
+      
       switch (type) {
         case "Placement Statistics":
           title = "Comprehensive Placement Statistics Report";
           reportContent = `
-            <div style="text-align: center; margin-bottom: 40px;">
-              <h1 style="color: #1f2937; font-size: 28px; margin-bottom: 10px;">${title}</h1>
-              <p style="color: #6b7280; font-size: 14px;">Generated on ${currentDate}</p>
-              <p style="color: #6b7280; font-size: 12px;">Academic Year: ${currentYear}</p>
+            <div style="
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              padding: 40px 30px;
+              border-radius: 15px;
+              margin-bottom: 40px;
+              box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+              position: relative;
+              overflow: hidden;
+            ">
+              <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+              <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+              <div style="position: relative; z-index: 2; text-align: center;">
+                <h1 style="
+                  font-size: 36px; 
+                  margin-bottom: 15px; 
+                  font-weight: 700;
+                  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                  letter-spacing: 1px;
+                ">${title}</h1>
+                <div style="
+                  display: inline-block;
+                  background: rgba(255,255,255,0.2);
+                  padding: 8px 20px;
+                  border-radius: 25px;
+                  margin-bottom: 10px;
+                  backdrop-filter: blur(10px);
+                ">
+                  <p style="margin: 0; font-size: 16px; font-weight: 500;">Generated on ${currentDate}</p>
+                </div>
+                <div style="
+                  display: inline-block;
+                  background: rgba(255,255,255,0.15);
+                  padding: 6px 16px;
+                  border-radius: 20px;
+                  backdrop-filter: blur(10px);
+                ">
+                  <p style="margin: 0; font-size: 14px; font-weight: 400;">Academic Year: ${currentYear}</p>
+                </div>
+              </div>
             </div>
             
-            <div style="margin-bottom: 30px; background-color: #f8fafc; padding: 20px; border-radius: 8px;">
-              <h2 style="color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 20px;">Executive Summary</h2>
-              <p style="color: #4b5563; line-height: 1.8; margin-bottom: 15px;">
+            <div style="
+              margin-bottom: 40px; 
+              background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+              padding: 30px; 
+              border-radius: 15px;
+              border: 1px solid #e2e8f0;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+              position: relative;
+            ">
+              <div style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor}, ${accentColor});
+                border-radius: 15px 15px 0 0;
+              "></div>
+              <h2 style="
+                color: #1f2937; 
+                border-bottom: 2px solid #e5e7eb; 
+                padding-bottom: 15px; 
+                margin-bottom: 25px;
+                font-size: 28px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+              ">
+                <span style="
+                  display: inline-block;
+                  width: 8px;
+                  height: 24px;
+                  background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor});
+                  border-radius: 4px;
+                  margin-right: 12px;
+                "></span>
+                Executive Summary
+              </h2>
+              <p style="
+                color: #4b5563; 
+                line-height: 1.8; 
+                margin-bottom: 25px;
+                font-size: 16px;
+                text-align: justify;
+              ">
                 This comprehensive placement report provides detailed analysis of student placement outcomes, 
                 including statistical breakdowns, trend analysis, and performance metrics across departments, 
                 companies, and academic years. The report serves as a strategic document for understanding 
                 placement effectiveness and identifying areas for improvement.
               </p>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
-                <div style="background-color: #dbeafe; padding: 15px; border-radius: 6px;">
-                  <h3 style="color: #1e40af; margin-bottom: 10px;">Overall Performance</h3>
-                  <p style="color: #1e40af; font-size: 14px;">Total Students: <strong>${totalStudents}</strong></p>
-                  <p style="color: #1e40af; font-size: 14px;">Placement Rate: <strong>${placementRate}%</strong></p>
+              
+              <!-- Enhanced KPI Cards -->
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 25px;">
+                <div style="
+                  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+                  padding: 20px;
+                  border-radius: 12px;
+                  border: 1px solid #93c5fd;
+                  position: relative;
+                  overflow: hidden;
+                ">
+                  <div style="
+                    position: absolute;
+                    top: -10px;
+                    right: -10px;
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(59, 130, 246, 0.1);
+                    border-radius: 50%;
+                  "></div>
+                  <h3 style="color: ${primaryColor}; margin-bottom: 12px; font-size: 18px; font-weight: 600;">Total Students</h3>
+                  <div style="font-size: 32px; font-weight: 700; color: ${primaryColor}; margin-bottom: 5px;">${totalStudents}</div>
+                  <div style="font-size: 14px; color: #6b7280;">Active Students</div>
                 </div>
-                <div style="background-color: #dcfce7; padding: 15px; border-radius: 6px;">
-                  <h3 style="color: #166534; margin-bottom: 10px;">Package Analysis</h3>
-                  <p style="color: #166534; font-size: 14px;">Average Package: <strong>₹${averagePackage} LPA</strong></p>
-                  <p style="color: #166534; font-size: 14px;">Highest Package: <strong>₹${highestPackage} LPA</strong></p>
+                
+                <div style="
+                  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+                  padding: 20px;
+                  border-radius: 12px;
+                  border: 1px solid #86efac;
+                  position: relative;
+                  overflow: hidden;
+                ">
+                  <div style="
+                    position: absolute;
+                    top: -10px;
+                    right: -10px;
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(34, 197, 94, 0.1);
+                    border-radius: 50%;
+                  "></div>
+                  <h3 style="color: ${secondaryColor}; margin-bottom: 12px; font-size: 18px; font-weight: 600;">Placement Rate</h3>
+                  <div style="font-size: 32px; font-weight: 700; color: ${secondaryColor}; margin-bottom: 5px;">${placementRate}%</div>
+                  <div style="font-size: 14px; color: #6b7280;">Success Rate</div>
+                </div>
+                
+                <div style="
+                  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                  padding: 20px;
+                  border-radius: 12px;
+                  border: 1px solid #fcd34d;
+                  position: relative;
+                  overflow: hidden;
+                ">
+                  <div style="
+                    position: absolute;
+                    top: -10px;
+                    right: -10px;
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(245, 158, 11, 0.1);
+                    border-radius: 50%;
+                  "></div>
+                  <h3 style="color: ${accentColor}; margin-bottom: 12px; font-size: 18px; font-weight: 600;">Avg Package</h3>
+                  <div style="font-size: 32px; font-weight: 700; color: ${accentColor}; margin-bottom: 5px;">${averagePackage}</div>
+                  <div style="font-size: 14px; color: #6b7280;">LPA</div>
+                </div>
+                
+                <div style="
+                  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+                  padding: 20px;
+                  border-radius: 12px;
+                  border: 1px solid #f9a8d4;
+                  position: relative;
+                  overflow: hidden;
+                ">
+                  <div style="
+                    position: absolute;
+                    top: -10px;
+                    right: -10px;
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(236, 72, 153, 0.1);
+                    border-radius: 50%;
+                  "></div>
+                  <h3 style="color: #be185d; margin-bottom: 12px; font-size: 18px; font-weight: 600;">Top Package</h3>
+                  <div style="font-size: 32px; font-weight: 700; color: #be185d; margin-bottom: 5px;">${highestPackage}</div>
+                  <div style="font-size: 14px; color: #6b7280;">LPA</div>
+                </div>
+              </div>
+              
+              <!-- Advanced Analytics Section -->
+              <div style="
+                margin-top: 30px;
+                padding: 20px;
+                background: rgba(255,255,255,0.7);
+                border-radius: 10px;
+                border: 1px solid #e5e7eb;
+              ">
+                <h4 style="
+                  color: #374151;
+                  margin-bottom: 15px;
+                  font-size: 18px;
+                  font-weight: 600;
+                ">📊 Advanced Analytics</h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                  <div style="text-align: center;">
+                    <div style="
+                      width: 60px;
+                      height: 60px;
+                      border-radius: 50%;
+                      background: linear-gradient(135deg, ${successColor}, ${secondaryColor});
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      margin: 0 auto 10px;
+                      color: white;
+                      font-weight: 700;
+                      font-size: 18px;
+                    ">${placedStudents}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Placed Students</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="
+                      width: 60px;
+                      height: 60px;
+                      border-radius: 50%;
+                      background: linear-gradient(135deg, ${warningColor}, ${accentColor});
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      margin: 0 auto 10px;
+                      color: white;
+                      font-weight: 700;
+                      font-size: 18px;
+                    ">${unplacedStudents}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Unplaced Students</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="
+                      width: 60px;
+                      height: 60px;
+                      border-radius: 50%;
+                      background: linear-gradient(135deg, ${primaryColor}, #3b82f6);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      margin: 0 auto 10px;
+                      color: white;
+                      font-weight: 700;
+                      font-size: 18px;
+                    ">${Object.keys(companyStats).length}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Companies</div>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div style="margin-bottom: 30px;">
-              <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Detailed Key Metrics</h2>
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
-                <div style="background-color: #fef3c7; padding: 12px; border-radius: 6px;">
-                  <h4 style="color: #92400e; margin-bottom: 8px;">Student Distribution</h4>
-                  <ul style="color: #92400e; font-size: 13px; line-height: 1.6;">
-                    <li>Total Students: ${totalStudents}</li>
-                    <li>Placed Students: ${placedStudents}</li>
-                    <li>Unplaced Students: ${unplacedStudents}</li>
-                    <li>Placement Rate: ${placementRate}%</li>
-                  </ul>
+            <div style="margin-bottom: 40px;">
+              <h2 style="
+                color: #374151; 
+                border-bottom: 2px solid #e5e7eb; 
+                padding-bottom: 15px;
+                font-size: 22px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                margin-bottom: 25px;
+              ">
+                <span style="
+                  display: inline-block;
+                  width: 6px;
+                  height: 20px;
+                  background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor});
+                  border-radius: 3px;
+                  margin-right: 10px;
+                "></span>
+                📈 Detailed Key Metrics
+              </h2>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px;">
+                <div style="
+                  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                  padding: 20px;
+                  border-radius: 12px;
+                  border: 1px solid #fcd34d;
+                  position: relative;
+                  overflow: hidden;
+                ">
+                  <div style="
+                    position: absolute;
+                    top: -15px;
+                    right: -15px;
+                    width: 60px;
+                    height: 60px;
+                    background: rgba(245, 158, 11, 0.1);
+                    border-radius: 50%;
+                  "></div>
+                  <h4 style="
+                    color: ${accentColor}; 
+                    margin-bottom: 15px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                  ">
+                    <span style="margin-right: 8px;">👥</span>
+                    Student Distribution
+                  </h4>
+                  <div style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                    margin-bottom: 15px;
+                  ">
+                    <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                      <div style="font-size: 20px; font-weight: 700; color: ${accentColor};">${totalStudents}</div>
+                      <div style="font-size: 11px; color: #6b7280;">Total</div>
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                      <div style="font-size: 20px; font-weight: 700; color: ${successColor};">${placedStudents}</div>
+                      <div style="font-size: 11px; color: #6b7280;">Placed</div>
+                    </div>
+                  </div>
+                  <div style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                  ">
+                    <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                      <div style="font-size: 20px; font-weight: 700; color: ${warningColor};">${unplacedStudents}</div>
+                      <div style="font-size: 11px; color: #6b7280;">Unplaced</div>
+                    </div>
+                    <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                      <div style="font-size: 20px; font-weight: 700; color: ${secondaryColor};">${placementRate}%</div>
+                      <div style="font-size: 11px; color: #6b7280;">Rate</div>
+                    </div>
+                  </div>
                 </div>
-                <div style="background-color: #fce7f3; padding: 12px; border-radius: 6px;">
-                  <h4 style="color: #be185d; margin-bottom: 8px;">Package Statistics</h4>
-                  <ul style="color: #be185d; font-size: 13px; line-height: 1.6;">
-                    <li>Average Package: ₹${averagePackage} LPA</li>
-                    <li>Highest Package: ₹${highestPackage} LPA</li>
-                    <li>Lowest Package: ₹${lowestPackage} LPA</li>
-                    <li>Students with Packages: ${placedStudentsWithPackage.length}</li>
-                  </ul>
+                
+                <div style="
+                  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+                  padding: 20px;
+                  border-radius: 12px;
+                  border: 1px solid #f9a8d4;
+                  position: relative;
+                  overflow: hidden;
+                ">
+                  <div style="
+                    position: absolute;
+                    top: -15px;
+                    right: -15px;
+                    width: 60px;
+                    height: 60px;
+                    background: rgba(236, 72, 153, 0.1);
+                    border-radius: 50%;
+                  "></div>
+                  <h4 style="
+                    color: #be185d; 
+                    margin-bottom: 15px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                  ">
+                    <span style="margin-right: 8px;">💰</span>
+                    Package Statistics
+                  </h4>
+                  <div style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                    margin-bottom: 15px;
+                  ">
+                                         <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                       <div style="font-size: 18px; font-weight: 700; color: #be185d;">${averagePackage}</div>
+                       <div style="font-size: 11px; color: #6b7280;">Average</div>
+                     </div>
+                     <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                       <div style="font-size: 18px; font-weight: 700; color: #be185d;">${highestPackage}</div>
+                       <div style="font-size: 11px; color: #6b7280;">Highest</div>
+                     </div>
+                   </div>
+                   <div style="
+                     display: grid;
+                     grid-template-columns: 1fr 1fr;
+                     gap: 10px;
+                   ">
+                     <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                       <div style="font-size: 18px; font-weight: 700; color: #be185d;">${lowestPackage}</div>
+                       <div style="font-size: 11px; color: #6b7280;">Lowest</div>
+                     </div>
+                    <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                      <div style="font-size: 18px; font-weight: 700; color: #be185d;">${placedStudentsWithPackage.length}</div>
+                      <div style="font-size: 11px; color: #6b7280;">With Package</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div style="margin-bottom: 30px;">
-              <h2 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Department-wise Analysis</h2>
-              <p style="color: #6b7280; margin-bottom: 15px; font-size: 14px;">
+            <div style="margin-bottom: 40px;">
+              <h2 style="
+                color: #374151; 
+                border-bottom: 2px solid #e5e7eb; 
+                padding-bottom: 15px;
+                font-size: 22px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                margin-bottom: 25px;
+              ">
+                <span style="
+                  display: inline-block;
+                  width: 6px;
+                  height: 20px;
+                  background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor});
+                  border-radius: 3px;
+                  margin-right: 10px;
+                "></span>
+                🏢 Department-wise Analysis
+              </h2>
+              <p style="
+                color: #6b7280; 
+                margin-bottom: 20px; 
+                font-size: 14px;
+                line-height: 1.6;
+                text-align: justify;
+              ">
                 Detailed breakdown of placement performance across different departments, showing total students, 
-                placement rates, and average packages for each department.
+                placement rates, and average packages for each department. This analysis helps identify 
+                departments with strong placement records and those requiring additional support.
               </p>
-              <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+              
+              <!-- Department Performance Summary -->
+              <div style="
+                margin-bottom: 20px;
+                padding: 15px;
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                border-radius: 10px;
+                border: 1px solid #e2e8f0;
+              ">
+                <h4 style="
+                  color: #374151;
+                  margin-bottom: 10px;
+                  font-size: 16px;
+                  font-weight: 600;
+                ">📊 Performance Overview</h4>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                  <div style="text-align: center;">
+                    <div style="font-size: 18px; font-weight: 700; color: ${primaryColor};">${Object.keys(deptStats).length}</div>
+                    <div style="font-size: 11px; color: #6b7280;">Departments</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="font-size: 18px; font-weight: 700; color: ${successColor};">${Object.entries(deptStats).filter(([_, stats]) => (stats.placed / stats.total) * 100 >= 80).length}</div>
+                    <div style="font-size: 11px; color: #6b7280;">Excellent (≥80%)</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="font-size: 18px; font-weight: 700; color: ${warningColor};">${Object.entries(deptStats).filter(([_, stats]) => (stats.placed / stats.total) * 100 >= 60 && (stats.placed / stats.total) * 100 < 80).length}</div>
+                    <div style="font-size: 11px; color: #6b7280;">Good (60-79%)</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="font-size: 18px; font-weight: 700; color: ${dangerColor};">${Object.entries(deptStats).filter(([_, stats]) => (stats.placed / stats.total) * 100 < 60).length}</div>
+                    <div style="font-size: 11px; color: #6b7280;">Needs Improvement</div>
+                  </div>
+                </div>
+              </div>
+              
+              <table style="
+                width: 100%; 
+                border-collapse: collapse; 
+                margin-top: 15px; 
+                font-size: 14px;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+              ">
                 <thead>
-                  <tr style="background-color: #f3f4f6;">
-                    <th style="border: 1px solid #d1d5db; padding: 10px; text-align: left;">Department</th>
-                    <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Total Students</th>
-                    <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Placed Students</th>
-                    <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Placement Rate</th>
-                    <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Avg Package</th>
-                    <th style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">Performance</th>
+                  <tr style="
+                    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                    border-bottom: 2px solid #d1d5db;
+                  ">
+                    <th style="
+                      border: 1px solid #d1d5db; 
+                      padding: 14px; 
+                      text-align: left;
+                      font-weight: 600;
+                      color: #374151;
+                      background: rgba(59, 130, 246, 0.1);
+                      font-size: 15px;
+                    ">Department</th>
+                                          <th style="
+                        border: 1px solid #d1d5db; 
+                        padding: 14px; 
+                        text-align: center;
+                        font-weight: 600;
+                        color: #374151;
+                        font-size: 15px;
+                      ">Total Students</th>
+                    <th style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      text-align: center;
+                      font-weight: 600;
+                      color: #374151;
+                    ">Placed Students</th>
+                    <th style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      text-align: center;
+                      font-weight: 600;
+                      color: #374151;
+                    ">Placement Rate</th>
+                    <th style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      text-align: center;
+                      font-weight: 600;
+                      color: #374151;
+                    ">Avg Package</th>
+                    <th style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      text-align: center;
+                      font-weight: 600;
+                      color: #374151;
+                    ">Performance</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${Object.entries(deptStats).map(([dept, stats]: [string, any]) => {
-                    const deptPlacementRate = stats.total > 0 ? ((stats.placed / stats.total) * 100).toFixed(1) : 0;
+                  ${Object.entries(deptStats).map(([dept, stats]: [string, any], index: number) => {
+                    const deptPlacementRate = stats.total > 0 ? ((stats.placed / stats.total) * 100).toFixed(1) : '0';
                     const avgPackage = stats.packages.length > 0 ? (stats.packages.reduce((sum: number, pkg: number) => sum + pkg, 0) / stats.packages.length).toFixed(1) : 'N/A';
                     const performance = parseFloat(deptPlacementRate) >= 80 ? 'Excellent' : parseFloat(deptPlacementRate) >= 60 ? 'Good' : parseFloat(deptPlacementRate) >= 40 ? 'Average' : 'Needs Improvement';
-                    const performanceColor = performance === 'Excellent' ? '#059669' : performance === 'Good' ? '#d97706' : performance === 'Average' ? '#dc2626' : '#dc2626';
+                    const performanceColor = performance === 'Excellent' ? successColor : performance === 'Good' ? warningColor : performance === 'Average' ? '#f59e0b' : dangerColor;
+                    const rowBg = index % 2 === 0 ? '#ffffff' : '#f9fafb';
                     return `
-                      <tr>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500;">${dept}</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.total}</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.placed}</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${deptPlacementRate}%</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">₹${avgPackage} LPA</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center; color: ${performanceColor}; font-weight: 500;">${performance}</td>
+                      <tr style="background-color: ${rowBg};">
+                        <td style="
+                          border: 1px solid #d1d5db; 
+                          padding: 14px; 
+                          font-weight: 600;
+                          color: ${primaryColor};
+                          font-size: 15px;
+                        ">${dept}</td>
+                        <td style="
+                          border: 1px solid #d1d5db; 
+                          padding: 12px; 
+                          text-align: center;
+                          font-weight: 500;
+                        ">${stats.total}</td>
+                        <td style="
+                          border: 1px solid #d1d5db; 
+                          padding: 12px; 
+                          text-align: center;
+                          font-weight: 500;
+                          color: ${successColor};
+                        ">${stats.placed}</td>
+                        <td style="
+                          border: 1px solid #d1d5db; 
+                          padding: 12px; 
+                          text-align: center;
+                          font-weight: 600;
+                          color: ${parseFloat(deptPlacementRate) >= 80 ? successColor : parseFloat(deptPlacementRate) >= 60 ? warningColor : dangerColor};
+                        ">${deptPlacementRate}%</td>
+                        <td style="
+                          border: 1px solid #d1d5db; 
+                          padding: 12px; 
+                          text-align: center;
+                          font-weight: 500;
+                          color: #be185d;
+                        ">${avgPackage} LPA</td>
+                        <td style="
+                          border: 1px solid #d1d5db; 
+                          padding: 12px; 
+                          text-align: center; 
+                          color: ${performanceColor}; 
+                          font-weight: 600;
+                          background: ${performanceColor}15;
+                        ">${performance}</td>
                       </tr>
                     `;
                   }).join('')}
                 </tbody>
+                <tfoot>
+                  <tr style="
+                    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                    border-top: 2px solid #d1d5db;
+                  ">
+                    <td style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      font-weight: 700;
+                      color: #374151;
+                    ">TOTAL</td>
+                    <td style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      text-align: center;
+                      font-weight: 700;
+                      color: ${primaryColor};
+                    ">${totalStudents}</td>
+                    <td style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      text-align: center;
+                      font-weight: 700;
+                      color: ${successColor};
+                    ">${placedStudents}</td>
+                    <td style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      text-align: center;
+                      font-weight: 700;
+                      color: ${secondaryColor};
+                    ">${placementRate}%</td>
+                                            <td style="
+                          border: 1px solid #d1d5db; 
+                          padding: 12px; 
+                          text-align: center;
+                          font-weight: 700;
+                          color: #be185d;
+                        ">${averagePackage} LPA</td>
+                    <td style="
+                      border: 1px solid #d1d5db; 
+                      padding: 12px; 
+                      text-align: center;
+                      font-weight: 700;
+                      color: #374151;
+                    ">OVERALL</td>
+                  </tr>
+                </tfoot>
               </table>
+              
+              <!-- Department Insights -->
+              <div style="
+                margin-top: 20px;
+                padding: 15px;
+                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                border-radius: 10px;
+                border: 1px solid #fcd34d;
+              ">
+                <h4 style="
+                  color: ${accentColor};
+                  margin-bottom: 10px;
+                  font-size: 16px;
+                  font-weight: 600;
+                ">💡 Key Insights</h4>
+                <ul style="
+                  color: #92400e;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  margin: 0;
+                  padding-left: 20px;
+                ">
+                  <li>${Object.entries(deptStats).filter(([_, stats]) => (stats.placed / stats.total) * 100 >= 80).length} departments achieved excellent placement rates (≥80%)</li>
+                  <li>${Object.entries(deptStats).filter(([_, stats]) => (stats.placed / stats.total) * 100 < 60).length} departments need targeted improvement strategies</li>
+                  <li>Average package varies significantly across departments, indicating different market demands</li>
+                  <li>Department-specific training programs could enhance placement outcomes</li>
+                </ul>
+              </div>
             </div>
             
             <div style="margin-bottom: 30px;">
@@ -437,12 +1017,12 @@ export function ExportFunctions() {
                 <tbody>
                   ${Object.entries(companyStats).map(([company, stats]: [string, any]) => {
                     const avgPackage = stats.packages.length > 0 ? (stats.packages.reduce((sum: number, pkg: number) => sum + pkg, 0) / stats.packages.length).toFixed(1) : 'N/A';
-                    const topRoles = [...new Set(stats.roles)].slice(0, 3).join(', ') || 'N/A';
+                    const topRoles = Array.from(new Set(stats.roles)).slice(0, 3).join(', ') || 'N/A';
                     return `
                       <tr>
                         <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500;">${company}</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.count}</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">₹${avgPackage} LPA</td>
+                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${avgPackage} LPA</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${topRoles}</td>
                       </tr>
                     `;
@@ -476,7 +1056,7 @@ export function ExportFunctions() {
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.total}</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.placed}</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${yearPlacementRate}%</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">₹${avgPackage} LPA</td>
+                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${avgPackage} LPA</td>
                       </tr>
                     `;
                   }).join('')}
@@ -484,23 +1064,167 @@ export function ExportFunctions() {
               </table>
             </div>
             
-            <div style="margin-bottom: 30px; background-color: #fef2f2; padding: 20px; border-radius: 8px;">
-              <h2 style="color: #991b1b; border-bottom: 2px solid #fecaca; padding-bottom: 10px;">Recommendations & Insights</h2>
-              <div style="color: #7f1d1d; line-height: 1.8;">
-                <h3 style="margin-bottom: 10px;">Key Insights:</h3>
-                <ul style="margin-bottom: 15px;">
-                  <li>Overall placement rate of ${placementRate}% indicates ${parseFloat(placementRate) >= 80 ? 'excellent' : parseFloat(placementRate) >= 60 ? 'good' : parseFloat(placementRate) >= 40 ? 'moderate' : 'room for improvement'} performance</li>
-                  <li>Average package of ₹${averagePackage} LPA reflects the market value of our graduates</li>
-                  <li>${Object.keys(companyStats).length} companies participated in the placement process</li>
-                  <li>Department-wise analysis shows varying performance levels across different branches</li>
-                </ul>
-                <h3 style="margin-bottom: 10px;">Strategic Recommendations:</h3>
-                <ul>
-                  <li>Focus on departments with lower placement rates for targeted improvement</li>
-                  <li>Strengthen industry partnerships to increase company participation</li>
-                  <li>Enhance skill development programs to improve package offerings</li>
-                  <li>Implement career counseling initiatives for unplaced students</li>
-                </ul>
+            <div style="
+              margin-bottom: 40px; 
+              background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+              padding: 30px; 
+              border-radius: 15px;
+              border: 1px solid #fecaca;
+              position: relative;
+              overflow: hidden;
+            ">
+              <div style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, ${dangerColor}, #ef4444, #f87171);
+                border-radius: 15px 15px 0 0;
+              "></div>
+              <h2 style="
+                color: #991b1b; 
+                border-bottom: 2px solid #fecaca; 
+                padding-bottom: 15px;
+                font-size: 24px;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                margin-bottom: 25px;
+              ">
+                <span style="
+                  display: inline-block;
+                  width: 8px;
+                  height: 24px;
+                  background: linear-gradient(90deg, ${dangerColor}, #ef4444);
+                  border-radius: 4px;
+                  margin-right: 12px;
+                "></span>
+                🎯 Strategic Recommendations & Insights
+              </h2>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <div style="
+                  background: rgba(255,255,255,0.7);
+                  padding: 20px;
+                  border-radius: 10px;
+                  border: 1px solid #fecaca;
+                ">
+                  <h3 style="
+                    color: #991b1b; 
+                    margin-bottom: 15px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                  ">
+                    <span style="margin-right: 8px;">📊</span>
+                    Key Performance Insights
+                  </h3>
+                  <ul style="
+                    color: #7f1d1d; 
+                    line-height: 1.8;
+                    font-size: 14px;
+                    margin: 0;
+                    padding-left: 20px;
+                  ">
+                    <li style="margin-bottom: 8px;">
+                      <strong>Overall Performance:</strong> ${String(placementRate)}% placement rate indicates 
+                      <span style="
+                        color: ${parseFloat(String(placementRate)) >= 80 ? successColor : parseFloat(String(placementRate)) >= 60 ? warningColor : dangerColor};
+                        font-weight: 600;
+                      ">${parseFloat(String(placementRate)) >= 80 ? 'excellent' : parseFloat(String(placementRate)) >= 60 ? 'good' : parseFloat(String(placementRate)) >= 40 ? 'moderate' : 'room for improvement'}</span> performance
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                      <strong>Market Value:</strong> Average package of ${averagePackage} LPA reflects competitive market positioning
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                      <strong>Industry Engagement:</strong> ${Object.keys(companyStats).length} companies actively participated
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                      <strong>Department Diversity:</strong> Varying performance levels across ${Object.keys(deptStats).length} departments
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                      <strong>Package Range:</strong> ${lowestPackage} - ${highestPackage} LPA shows broad market acceptance
+                    </li>
+                  </ul>
+                </div>
+                
+                <div style="
+                  background: rgba(255,255,255,0.7);
+                  padding: 20px;
+                  border-radius: 10px;
+                  border: 1px solid #fecaca;
+                ">
+                  <h3 style="
+                    color: #991b1b; 
+                    margin-bottom: 15px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                  ">
+                    <span style="margin-right: 8px;">🚀</span>
+                    Strategic Action Plan
+                  </h3>
+                  <ul style="
+                    color: #7f1d1d; 
+                    line-height: 1.8;
+                    font-size: 14px;
+                    margin: 0;
+                    padding-left: 20px;
+                  ">
+                    <li style="margin-bottom: 8px;">
+                      <strong>Targeted Support:</strong> Focus on ${Object.entries(deptStats).filter(([_, stats]) => (stats.placed / stats.total) * 100 < 60).length} departments with <60% placement rates
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                      <strong>Partnership Expansion:</strong> Strengthen industry collaborations to increase company participation
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                      <strong>Skill Enhancement:</strong> Implement specialized training programs to improve package offerings
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                      <strong>Career Guidance:</strong> Develop comprehensive counseling initiatives for unplaced students
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                      <strong>Performance Monitoring:</strong> Establish quarterly review mechanisms for continuous improvement
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              <!-- Performance Metrics Summary -->
+              <div style="
+                margin-top: 25px;
+                padding: 20px;
+                background: rgba(255,255,255,0.8);
+                border-radius: 10px;
+                border: 1px solid #fecaca;
+              ">
+                <h4 style="
+                  color: #991b1b;
+                  margin-bottom: 15px;
+                  font-size: 16px;
+                  font-weight: 600;
+                ">📈 Performance Metrics Summary</h4>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                  <div style="text-align: center; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">
+                    <div style="font-size: 16px; font-weight: 700; color: ${dangerColor};">${placementRate}%</div>
+                    <div style="font-size: 11px; color: #6b7280;">Placement Rate</div>
+                  </div>
+                  <div style="text-align: center; padding: 10px; background: rgba(34, 197, 94, 0.1); border-radius: 8px;">
+                    <div style="font-size: 16px; font-weight: 700; color: ${successColor};">${Object.keys(companyStats).length}</div>
+                    <div style="font-size: 11px; color: #6b7280;">Companies</div>
+                  </div>
+                  <div style="text-align: center; padding: 10px; background: rgba(59, 130, 246, 0.1); border-radius: 8px;">
+                    <div style="font-size: 16px; font-weight: 700; color: ${primaryColor};">${Object.keys(deptStats).length}</div>
+                    <div style="font-size: 11px; color: #6b7280;">Departments</div>
+                  </div>
+                  <div style="text-align: center; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 8px;">
+                    <div style="font-size: 16px; font-weight: 700; color: ${accentColor};">₹${averagePackage}</div>
+                    <div style="font-size: 11px; color: #6b7280;">Avg Package</div>
+                  </div>
+                </div>
               </div>
             </div>
           `;
@@ -510,12 +1234,12 @@ export function ExportFunctions() {
           title = "Comprehensive Event Management Report";
           
           // Event analysis
-          const eventsByCompany = events.reduce((acc, event) => {
+          const eventsByCompany = events.reduce((acc: { [key: string]: Event[] }, event) => {
             const company = event.company || 'Unknown';
             if (!acc[company]) acc[company] = [];
             acc[company].push(event);
             return acc;
-          }, {});
+          }, {} as { [key: string]: Event[] });
           
           const eventsByStatus = {
             completed: completedEvents,
@@ -717,7 +1441,7 @@ export function ExportFunctions() {
           
           // Calculate comprehensive student statistics
           const currentStudents = students.filter(s => !s.selected).length;
-          const studentYearStats2 = students.reduce((acc, student) => {
+          const studentYearStats2 = students.reduce((acc: { [key: string]: { total: number; placed: number; packages: number[] } }, student) => {
             const year = student.year || 'Unknown';
             if (!acc[year]) acc[year] = { total: 0, placed: 0, packages: [] };
             acc[year].total++;
@@ -726,19 +1450,19 @@ export function ExportFunctions() {
               if (student.package) acc[year].packages.push(student.package);
             }
             return acc;
-          }, {});
+          }, {} as { [key: string]: { total: number; placed: number; packages: number[] } });
           
           // Gender analysis (if available)
-          const genderStats = students.reduce((acc, student) => {
+          const genderStats = students.reduce((acc: { [key: string]: { total: number; placed: number } }, student) => {
             const gender = student.gender || 'Unknown';
             if (!acc[gender]) acc[gender] = { total: 0, placed: 0 };
             acc[gender].total++;
             if (student.selected) acc[gender].placed++;
             return acc;
-          }, {});
+          }, {} as { [key: string]: { total: number; placed: number } });
           
           // Academic performance analysis
-          const academicStats = students.reduce((acc, student) => {
+          const academicStats = students.reduce((acc: { excellent: number; good: number; average: number; needsImprovement: number }, student) => {
             const cgpa = student.cgpa || 0;
             if (cgpa >= 8.0) acc.excellent++;
             else if (cgpa >= 7.0) acc.good++;
@@ -828,7 +1552,7 @@ export function ExportFunctions() {
                   ${students.map(student => {
                     const status = student.selected ? 'Placed' : 'Not Placed';
                     const statusColor = student.selected ? '#059669' : '#dc2626';
-                    const packageAmount = student.selected && student.package ? `₹${student.package} LPA` : 'N/A';
+                    const packageAmount = student.selected && student.package ? `${student.package} LPA` : 'N/A';
                     return `
                       <tr>
                         <td style="border: 1px solid #d1d5db; padding: 10px; font-weight: 500;">${student.name}</td>
@@ -865,7 +1589,7 @@ export function ExportFunctions() {
                 </thead>
                 <tbody>
                   ${Object.entries(studentYearStats2).map(([year, stats]: [string, any]) => {
-                    const yearPlacementRate = stats.total > 0 ? ((stats.placed / stats.total) * 100).toFixed(1) : 0;
+                    const yearPlacementRate = stats.total > 0 ? ((stats.placed / stats.total) * 100).toFixed(1) : '0';
                     const avgPackage = stats.packages.length > 0 ? (stats.packages.reduce((sum: number, pkg: number) => sum + pkg, 0) / stats.packages.length).toFixed(1) : 'N/A';
                     const performance = parseFloat(yearPlacementRate) >= 80 ? 'Excellent' : parseFloat(yearPlacementRate) >= 60 ? 'Good' : parseFloat(yearPlacementRate) >= 40 ? 'Average' : 'Needs Improvement';
                     const performanceColor = performance === 'Excellent' ? '#059669' : performance === 'Good' ? '#d97706' : performance === 'Average' ? '#dc2626' : '#dc2626';
@@ -875,7 +1599,7 @@ export function ExportFunctions() {
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.total}</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.placed}</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${yearPlacementRate}%</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">₹${avgPackage} LPA</td>
+                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${avgPackage} LPA</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center; color: ${performanceColor}; font-weight: 500;">${performance}</td>
                       </tr>
                     `;
@@ -903,7 +1627,7 @@ export function ExportFunctions() {
                 </thead>
                 <tbody>
                   ${Object.entries(deptStats).map(([dept, stats]: [string, any]) => {
-                    const deptPlacementRate = stats.total > 0 ? ((stats.placed / stats.total) * 100).toFixed(1) : 0;
+                    const deptPlacementRate = stats.total > 0 ? ((stats.placed / stats.total) * 100).toFixed(1) : '0';
                     const avgPackage = stats.packages.length > 0 ? (stats.packages.reduce((sum: number, pkg: number) => sum + pkg, 0) / stats.packages.length).toFixed(1) : 'N/A';
                     const marketDemand = parseFloat(deptPlacementRate) >= 80 ? 'High' : parseFloat(deptPlacementRate) >= 60 ? 'Medium' : 'Low';
                     const demandColor = marketDemand === 'High' ? '#059669' : marketDemand === 'Medium' ? '#d97706' : '#dc2626';
@@ -913,7 +1637,7 @@ export function ExportFunctions() {
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.total}</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${stats.placed}</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${deptPlacementRate}%</td>
-                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">₹${avgPackage} LPA</td>
+                        <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center;">${avgPackage} LPA</td>
                         <td style="border: 1px solid #d1d5db; padding: 10px; text-align: center; color: ${demandColor}; font-weight: 500;">${marketDemand}</td>
                       </tr>
                     `;
@@ -958,31 +1682,43 @@ export function ExportFunctions() {
       
       // Convert to canvas and then to PDF
       const canvas = await html2canvas(reportDiv, {
-        scale: 2,
+        scale: 1.5, // Reduced scale for better quality
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: 1200,
+        height: undefined,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 1200,
+        windowHeight: undefined
       });
       
       document.body.removeChild(reportDiv);
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
+      
+      // Calculate image dimensions to fit 93% of page width
+      const imgWidth = pdfWidth * 0.93;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // Center the image horizontally
+      const marginX = (pdfWidth - imgWidth) / 2;
       
       let heightLeft = imgHeight;
       let position = 0;
       
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'PNG', marginX, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
       
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', marginX, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
       }
       
@@ -998,11 +1734,11 @@ export function ExportFunctions() {
       });
     } catch (error) {
       console.error('PDF generation error:', error);
-    toast({
+      toast({
         title: "Error",
         description: "Failed to generate PDF report",
         variant: "destructive",
-    });
+      });
     }
   };
 

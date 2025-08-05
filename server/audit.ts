@@ -77,8 +77,8 @@ async function logAuditEvent(
     // Store in database (you'll need to create an audit_logs table)
     await storage.createAuditLog(auditEntry);
     
-    // Console log for immediate visibility
-    console.log(`🔍 AUDIT: ${user.username} ${action} ${resource} - ${auditEntry.status} (${duration}ms)`);
+    // Console log for immediate visibility - removed for security
+    // console.log(`🔍 AUDIT: ${user.username} ${action} ${resource} - ${auditEntry.status} (${duration}ms)`);
     
   } catch (error) {
     console.error('Audit logging failed:', error);

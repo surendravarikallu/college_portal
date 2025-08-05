@@ -125,19 +125,15 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user, done) => {
-    console.log("Serializing user:", user.id);
     done(null, user.id);
   });
   
   passport.deserializeUser(async (id: number, done) => {
     try {
-      console.log("Deserializing user ID:", id);
       const user = await storage.getUser(id);
       if (!user) {
-        console.log("User not found during deserialization");
         return done(null, false);
       }
-      console.log("User deserialized successfully:", user.username);
       done(null, user);
     } catch (error) {
       console.error("Error deserializing user:", error);
@@ -163,19 +159,12 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", authLimiter, passport.authenticate("local"), (req, res) => {
-    console.log("=== Login successful ===");
-    console.log("User:", req.user);
-    console.log("Session ID:", req.sessionID);
-    console.log("Session:", req.session);
-    console.log("Is authenticated:", req.isAuthenticated());
-    
     // Force session save
     req.session.save((err) => {
       if (err) {
         console.error("Session save error:", err);
         return res.status(500).json({ message: "Session save failed" });
       }
-      console.log("Session saved successfully");
       res.status(200).json(req.user);
     });
   });
@@ -188,29 +177,14 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    console.log("=== /api/user endpoint called ===");
-    console.log("Session ID:", req.sessionID);
-    console.log("Is authenticated:", req.isAuthenticated());
-    console.log("User:", req.user);
-    console.log("Session:", req.session);
-    console.log("Cookies:", req.headers.cookie);
-    
     if (!req.isAuthenticated()) {
-      console.log("User not authenticated - returning 401");
       return res.status(401).json({ message: "Not authenticated" });
     }
-    console.log("User authenticated - returning user data");
     res.json(req.user);
   });
 
   // Test session endpoint
   app.get("/api/test-session", (req, res) => {
-    console.log("=== /api/test-session endpoint called ===");
-    console.log("Session ID:", req.sessionID);
-    console.log("Session exists:", !!req.session);
-    console.log("Session data:", req.session);
-    console.log("Cookies:", req.headers.cookie);
-    
     res.json({ 
       sessionId: req.sessionID,
       sessionExists: !!req.session,

@@ -101,6 +101,15 @@ export const importantNotifications = pgTable("important_notifications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const placementStuff = pgTable("placement_stuff", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  link: text("link"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const eventsRelations = relations(events, ({ many }) => ({
   attendance: many(attendance),
@@ -155,6 +164,7 @@ export const insertAttendanceSchema = createInsertSchema(attendance).omit({
 
 export const insertHeroNotificationSchema = createInsertSchema(heroNotifications).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertImportantNotificationSchema = createInsertSchema(importantNotifications).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertPlacementStuffSchema = createInsertSchema(placementStuff).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -174,3 +184,5 @@ export type HeroNotification = typeof heroNotifications.$inferSelect;
 export type InsertHeroNotification = z.infer<typeof insertHeroNotificationSchema>;
 export type ImportantNotification = typeof importantNotifications.$inferSelect;
 export type InsertImportantNotification = z.infer<typeof insertImportantNotificationSchema>;
+export type PlacementStuff = typeof placementStuff.$inferSelect;
+export type InsertPlacementStuff = z.infer<typeof insertPlacementStuffSchema>;

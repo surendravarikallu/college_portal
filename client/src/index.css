@@ -1,5 +1,9 @@
+/* stylelint-disable-next-line at-rule-no-unknown */
 @tailwind base;
+/* stylelint-disable-next-line at-rule-no-unknown */
 @tailwind components;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind utilities;
 
 
 /* Rotating Company Logos Animation */
@@ -149,8 +153,6 @@
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
-@tailwind utilities;
-
 :root {
   --background: hsl(210, 60%, 98%);
   --foreground: hsl(20, 14.3%, 4.1%);
@@ -213,22 +215,26 @@
 
 @layer base {
   * {
+    /* stylelint-disable-next-line at-rule-no-unknown */
     @apply border-border transition-all duration-300 ease-in-out;
   }
 
   body {
+    /* stylelint-disable-next-line at-rule-no-unknown */
     @apply font-sans antialiased bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-foreground min-h-screen;
     background-attachment: fixed;
     scroll-behavior: smooth;
   }
 
   .dark body {
+    /* stylelint-disable-next-line at-rule-no-unknown */
     @apply bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900;
   }
 }
 
 /* Stunning Card Effects */
 .glass-card {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply backdrop-blur-lg bg-white/80 border border-white/20 shadow-2xl;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(20px);
@@ -527,38 +533,47 @@
 
 /* Utility Classes */
 .text-success {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-green-600;
 }
 
 .text-warning {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-yellow-600;
 }
 
 .text-error {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply text-red-600;
 }
 
 .bg-success {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply bg-green-600;
 }
 
 .bg-warning {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply bg-yellow-600;
 }
 
 .bg-error {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply bg-red-600;
 }
 
 .border-success {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply border-green-600;
 }
 
 .border-warning {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply border-yellow-600;
 }
 
 .border-error {
+  /* stylelint-disable-next-line at-rule-no-unknown */
   @apply border-red-600;
 }
 
@@ -671,4 +686,3 @@
   .animate-spin-slow {
     animation: spin 20s linear infinite;
   }
-}

@@ -6,6 +6,11 @@ import { securityHeaders, errorHandler, validateRequest, securityRateLimit } fro
 import { csrfTokenMiddleware } from "./csrf";
 import helmet from "helmet";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -27,6 +32,12 @@ app.use(securityRateLimit);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
+// Serve attached_assets folder
+app.use('/attached_assets', express.static(path.join(__dirname, '..', 'attached_assets')));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -42,8 +53,11 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      
+      // Only log response size, not content for security
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        const responseSize = JSON.stringify(capturedJsonResponse).length;
+        logLine += ` :: ${responseSize} bytes`;
       }
 
       if (logLine.length > 80) {
