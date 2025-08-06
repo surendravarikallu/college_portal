@@ -51,21 +51,24 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      
-      // Only log response size, not content for security
-      if (capturedJsonResponse) {
-        const responseSize = JSON.stringify(capturedJsonResponse).length;
-        logLine += ` :: ${responseSize} bytes`;
-      }
+          if (path.startsWith("/api")) {
+        // Only log in development or for errors
+        if (process.env.NODE_ENV === 'development' || res.statusCode >= 400) {
+          let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+          
+          // Only log response size, not content for security
+          if (capturedJsonResponse) {
+            const responseSize = JSON.stringify(capturedJsonResponse).length;
+            logLine += ` :: ${responseSize} bytes`;
+          }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
+          if (logLine.length > 80) {
+            logLine = logLine.slice(0, 79) + "…";
+          }
 
-      log(logLine);
-    }
+          log(logLine);
+        }
+      }
   });
 
   next();

@@ -53,8 +53,11 @@ export const students = pgTable("students", {
   selected: boolean("selected").default(false),
   companyName: text("company_name"),
   offerLetterUrl: text("offer_letter_url"),
+  idCardUrl: text("id_card_url"), // ID card for placed students
   package: integer("package"), // LPA, only for placed students
   role: text("role"), // only for placed students
+  // For not placed students - detailed drive tracking
+  driveDetails: text("drive_details"), // JSON string containing detailed drive information
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -64,8 +67,14 @@ export const alumni = pgTable("alumni", {
   name: text("name").notNull(),
   rollNumber: text("roll_number").notNull(),
   passOutYear: integer("pass_out_year").notNull(),
+  currentStatus: text("current_status").notNull(), // "higher_education" or "job"
   higherEducationCollege: text("higher_education_college"),
   collegeRollNumber: text("college_roll_number"),
+  company: text("company"),
+  package: integer("package"),
+  role: text("role"),
+  offerLetterUrl: text("offer_letter_url"),
+  idCardUrl: text("id_card_url"),
   address: text("address").notNull(),
   contactNumber: text("contact_number").notNull(),
   email: text("email").notNull(),
@@ -155,6 +164,9 @@ export const insertStudentSchema = createInsertSchema(students).omit({
 export const insertAlumniSchema = createInsertSchema(alumni).omit({
   id: true,
   createdAt: true,
+}).extend({
+  currentStatus: z.enum(["higher_education", "job"]),
+  package: z.number().optional(),
 });
 
 export const insertAttendanceSchema = createInsertSchema(attendance).omit({

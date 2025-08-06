@@ -45,7 +45,7 @@ export const getQueryFn: <T>(options: {
     const url = queryKey.join("/") as string;
     const fullUrl = url.startsWith("http") ? url : `http://localhost:5000${url}`;
     
-    console.log("Making request to:", fullUrl);
+    // Request logging removed for cleaner console
     
     // Get CSRF token from user data if available
     const userData = queryClient.getQueryData(["/api/user"]) as any;
@@ -62,11 +62,12 @@ export const getQueryFn: <T>(options: {
       headers,
     });
 
-    console.log("Response status:", res.status);
-    console.log("Response headers:", Object.fromEntries(res.headers.entries()));
+    // Response logging removed for cleaner console
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      console.log("401 Unauthorized - returning null");
+      if (process.env.NODE_ENV === 'development') {
+        console.log("401 Unauthorized - returning null");
+      }
       return null;
     }
 

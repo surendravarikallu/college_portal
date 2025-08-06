@@ -165,26 +165,26 @@ export function NotificationManagement() {
     {
       id: -1,
       title: "Placement Registration Open",
-      description: "Students can now register for upcoming placement drives. Last date: 31st Jan 2025",
       type: "URGENT",
       link: "/placements/register",
-      createdAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
       id: -2,
       title: "Industry Expert Session",
-      description: "Join our industry expert session on latest tech trends on 30th Jan 2025",
       type: "NEW",
       link: "/sessions/industry-expert",
-      createdAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
       id: -3,
       title: "Coding Competition",
-      description: "Annual coding competition registration is now open. Prizes worth ₹50,000",
       type: "INFO",
       link: "/competitions/coding",
-      createdAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   ];
 

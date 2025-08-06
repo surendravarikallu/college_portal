@@ -12,9 +12,12 @@ interface Student {
   phone?: string;
   selected?: boolean;
   companyName?: string;
+  offerLetterUrl?: string;
+  idCardUrl?: string;
   package?: number;
   role?: string;
   batch?: string;
+  driveDetails?: string;
 }
 
 interface StudentListProps {

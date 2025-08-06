@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Save, X, User, Phone, Mail, Building, Briefcase } from 'lucide-react';
+import { Edit, Save, X, User, Phone, Mail, Building, Briefcase, Plus, Trash2 } from 'lucide-react';
+import { DriveDetail, StudentDriveDetails } from '@/types/drive-details';
 
 interface Student {
   id: number;
@@ -15,9 +16,12 @@ interface Student {
   phone?: string;
   selected?: boolean;
   companyName?: string;
+  offerLetterUrl?: string;
+  idCardUrl?: string;
   package?: number;
   role?: string;
   batch?: string;
+  driveDetails?: string;
 }
 
 interface StudentDetailsProps {
@@ -29,6 +33,13 @@ interface StudentDetailsProps {
 export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(student);
+  const [driveDetails, setDriveDetails] = useState<StudentDriveDetails>(() => {
+    try {
+      return student.driveDetails ? JSON.parse(student.driveDetails) : { drives: [], totalDrives: 0, totalRoundsQualified: 0 };
+    } catch {
+      return { drives: [], totalDrives: 0, totalRoundsQualified: 0 };
+    }
+  });
 
   const handleInputChange = (field: keyof Student, value: any) => {
     setFormData(prev => ({
@@ -63,6 +74,63 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
   const handleCancel = () => {
     setFormData(student);
     setIsEditing(false);
+    setDriveDetails(() => {
+      try {
+        return student.driveDetails ? JSON.parse(student.driveDetails) : { drives: [], totalDrives: 0, totalRoundsQualified: 0 };
+      } catch {
+        return { drives: [], totalDrives: 0, totalRoundsQualified: 0 };
+      }
+    });
+  };
+
+  const addDriveDetail = () => {
+    const newDrive: DriveDetail = {
+      id: Date.now().toString(),
+      companyName: "",
+      date: new Date().toISOString().split('T')[0],
+      roundsQualified: 0,
+      failedRound: "",
+      notes: "",
+    };
+    
+    const updatedDrives = [...driveDetails.drives, newDrive];
+    const updatedDetails = {
+      ...driveDetails,
+      drives: updatedDrives,
+      totalDrives: updatedDrives.length,
+      totalRoundsQualified: updatedDrives.reduce((sum, drive) => sum + drive.roundsQualified, 0),
+    };
+    
+    setDriveDetails(updatedDetails);
+    setFormData(prev => ({ ...prev, driveDetails: JSON.stringify(updatedDetails) }));
+  };
+
+  const updateDriveDetail = (id: string, field: keyof DriveDetail, value: any) => {
+    const updatedDrives = driveDetails.drives.map(drive => 
+      drive.id === id ? { ...drive, [field]: value } : drive
+    );
+    
+    const updatedDetails = {
+      ...driveDetails,
+      drives: updatedDrives,
+      totalRoundsQualified: updatedDrives.reduce((sum, drive) => sum + drive.roundsQualified, 0),
+    };
+    
+    setDriveDetails(updatedDetails);
+    setFormData(prev => ({ ...prev, driveDetails: JSON.stringify(updatedDetails) }));
+  };
+
+  const removeDriveDetail = (id: string) => {
+    const updatedDrives = driveDetails.drives.filter(drive => drive.id !== id);
+    const updatedDetails = {
+      ...driveDetails,
+      drives: updatedDrives,
+      totalDrives: updatedDrives.length,
+      totalRoundsQualified: updatedDrives.reduce((sum, drive) => sum + drive.roundsQualified, 0),
+    };
+    
+    setDriveDetails(updatedDetails);
+    setFormData(prev => ({ ...prev, driveDetails: JSON.stringify(updatedDetails) }));
   };
 
   if (isEditing) {
@@ -167,6 +235,120 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
               <Label htmlFor="selected">Placed</Label>
             </div>
 
+            {!formData.selected && (
+              <>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-base font-medium">Drive Details</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addDriveDetail}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Drive
+                    </Button>
+                  </div>
+                  
+                  {driveDetails.drives.length === 0 ? (
+                    <div className="text-center py-4 text-slate-500">
+                      No drives added yet. Click "Add Drive" to start tracking.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {driveDetails.drives.map((drive, index) => (
+                        <div key={drive.id} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-medium">Drive #{index + 1}</h4>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeDriveDetail(drive.id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <Label htmlFor={`company-${drive.id}`}>Company Name</Label>
+                              <Input
+                                id={`company-${drive.id}`}
+                                value={drive.companyName}
+                                onChange={(e) => updateDriveDetail(drive.id, 'companyName', e.target.value)}
+                                placeholder="e.g., TCS, Infosys"
+                                className="mt-1"
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`date-${drive.id}`}>Drive Date</Label>
+                              <Input
+                                id={`date-${drive.id}`}
+                                type="date"
+                                value={drive.date}
+                                onChange={(e) => updateDriveDetail(drive.id, 'date', e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`rounds-${drive.id}`}>Rounds Qualified</Label>
+                              <Input
+                                id={`rounds-${drive.id}`}
+                                type="number"
+                                min="0"
+                                value={drive.roundsQualified}
+                                onChange={(e) => updateDriveDetail(drive.id, 'roundsQualified', parseInt(e.target.value) || 0)}
+                                className="mt-1"
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`failed-${drive.id}`}>Failed at Round</Label>
+                              <Input
+                                id={`failed-${drive.id}`}
+                                value={drive.failedRound}
+                                onChange={(e) => updateDriveDetail(drive.id, 'failedRound', e.target.value)}
+                                placeholder="e.g., Technical Round, HR Round"
+                                className="mt-1"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor={`notes-${drive.id}`}>Notes (Optional)</Label>
+                            <Input
+                              id={`notes-${drive.id}`}
+                              value={drive.notes || ""}
+                              onChange={(e) => updateDriveDetail(drive.id, 'notes', e.target.value)}
+                              placeholder="Additional notes about this drive"
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <div className="bg-slate-50 p-3 rounded-lg">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium">Total Drives:</span> {driveDetails.totalDrives}
+                          </div>
+                          <div>
+                            <span className="font-medium">Total Rounds Qualified:</span> {driveDetails.totalRoundsQualified}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
             {formData.selected && (
               <>
                 <div>
@@ -197,6 +379,17 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
                     value={formData.role || ''}
                     onChange={(e) => handleInputChange('role', e.target.value)}
                     className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="idCardUrl">ID Card URL</Label>
+                  <Input
+                    id="idCardUrl"
+                    value={formData.idCardUrl || ''}
+                    onChange={(e) => handleInputChange('idCardUrl', e.target.value)}
+                    className="mt-1"
+                    placeholder="https://example.com/id-card.pdf"
                   />
                 </div>
               </>
@@ -298,7 +491,7 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
             </div>
           </div>
 
-          {student.selected && (
+          {student.selected ? (
             <>
               {student.companyName && (
                 <div>
@@ -320,6 +513,90 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
                   <p className="text-lg text-slate-800">{student.role}</p>
                 </div>
               )}
+
+              {student.offerLetterUrl && (
+                <div>
+                  <Label className="text-sm font-medium text-slate-500">Offer Letter</Label>
+                  <a 
+                    href={student.offerLetterUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    View Offer Letter
+                  </a>
+                </div>
+              )}
+
+              {student.idCardUrl && (
+                <div>
+                  <Label className="text-sm font-medium text-slate-500">ID Card</Label>
+                  <a 
+                    href={student.idCardUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    View ID Card
+                  </a>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {(() => {
+                try {
+                  const driveData = student.driveDetails ? JSON.parse(student.driveDetails) : { drives: [], totalDrives: 0, totalRoundsQualified: 0 };
+                  return (
+                    <>
+                      {driveData.drives.length > 0 ? (
+                        <div className="space-y-4">
+                          <div className="bg-red-50 p-4 rounded-lg">
+                            <h4 className="font-medium text-red-800 mb-3">Drive History</h4>
+                            <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                              <div>
+                                <span className="font-medium">Total Drives:</span> {driveData.totalDrives}
+                              </div>
+                              <div>
+                                <span className="font-medium">Total Rounds Qualified:</span> {driveData.totalRoundsQualified}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {driveData.drives.map((drive: any, index: number) => (
+                                <div key={drive.id || index} className="border border-red-200 rounded p-3 bg-white">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h5 className="font-medium text-red-800">Drive #{index + 1}</h5>
+                                    <span className="text-xs text-red-600">{drive.date}</span>
+                                  </div>
+                                  <div className="space-y-1 text-sm">
+                                    <p><span className="font-medium">Company:</span> {drive.companyName}</p>
+                                    <p><span className="font-medium">Rounds Qualified:</span> {drive.roundsQualified}</p>
+                                    <p><span className="font-medium">Failed at:</span> {drive.failedRound}</p>
+                                    {drive.notes && (
+                                      <p><span className="font-medium">Notes:</span> {drive.notes}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-slate-500">
+                          No drive history available
+                        </div>
+                      )}
+                    </>
+                  );
+                } catch {
+                  return (
+                    <div className="text-center py-4 text-slate-500">
+                      No drive history available
+                    </div>
+                  );
+                }
+              })()}
             </>
           )}
         </div>

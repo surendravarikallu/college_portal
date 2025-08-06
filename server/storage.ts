@@ -257,14 +257,18 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(students.batch, batch));
     }
     
-    let query = db.select().from(students);
-    
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      return await db
+        .select()
+        .from(students)
+        .where(and(...conditions))
+        .orderBy(asc(students.branch), asc(students.year), asc(students.batch), asc(students.rollNumber));
+    } else {
+      return await db
+        .select()
+        .from(students)
+        .orderBy(asc(students.branch), asc(students.year), asc(students.batch), asc(students.rollNumber));
     }
-    
-    // Order by branch, year, batch, and rollNumber for proper organization
-    return await query.orderBy(asc(students.branch), asc(students.year), asc(students.batch), asc(students.rollNumber));
   }
 
   async getStudentById(id: number): Promise<Student | undefined> {
@@ -438,8 +442,10 @@ export class DatabaseStorage implements IStorage {
 
   // Audit logging implementation
   async createAuditLog(auditEntry: any): Promise<void> {
-    // For now, just log to console
-    console.log("🔍 AUDIT LOG:", auditEntry);
+    // Only log security events and errors to console
+    if (auditEntry.status === 'error' || auditEntry.action === 'LOGIN' || auditEntry.action === 'LOGOUT') {
+      console.log("🔍 AUDIT LOG:", auditEntry);
+    }
     // TODO: Implement actual audit log storage in database
   }
 

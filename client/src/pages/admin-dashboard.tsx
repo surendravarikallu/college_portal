@@ -17,7 +17,9 @@ import { EventList } from '@/components/tpo/events/event-list';
 import { EventDetails } from '@/components/tpo/events/event-details';
 import { YearList as AlumniYearList } from '@/components/tpo/alumni/year-list';
 import { AlumniList } from '@/components/tpo/alumni/alumni-list';
+
 import { AlumniDetails } from '@/components/tpo/alumni/alumni-details';
+import { AddAlumniModal, EditAlumniModal } from '@/components/alumni-registration-modal';
 import { fetchDepartments, fetchYears as fetchStudentYears, fetchStudentsByDepartmentYear } from '@/api/students';
 import { fetchCompanies, fetchYears as fetchEventYears, fetchEventsByCompanyYear } from '@/api/events';
 import { Event, Student, Alumni, Attendance } from '@shared/schema';
@@ -319,6 +321,9 @@ export default function AdminDashboard() {
   const [showStudentManagement, setShowStudentManagement] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showAlumniManagement, setShowAlumniManagement] = useState(false);
+  const [showAddAlumniModal, setShowAddAlumniModal] = useState(false);
+  const [showEditAlumniModal, setShowEditAlumniModal] = useState(false);
+  const [editingAlumni, setEditingAlumni] = useState<any>(null);
   const [showNewsManagement, setShowNewsManagement] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [selectedEventForAttendance, setSelectedEventForAttendance] = useState<Event | null>(null);
@@ -449,11 +454,17 @@ export default function AdminDashboard() {
   }, [events]);
 
   useEffect(() => {
-    if (alumni.length >= 0) {
+    if (alumni.length > 0) {
       // Extract unique alumni pass out years
       const years = Array.from(new Set(alumni.map(a => a.passOutYear))).sort((a, b) => b - a);
       setAlumniYears(years);
-      console.log("Alumni years loaded:", years, "from alumni:", alumni.length);
+      // Only log in development and when there's actual data
+      if (process.env.NODE_ENV === 'development' && years.length > 0) {
+        console.log("Alumni years loaded:", years, "from alumni:", alumni.length);
+      }
+    } else {
+      // Clear alumni years when no data
+      setAlumniYears([]);
     }
   }, [alumni]);
 
@@ -1518,7 +1529,7 @@ export default function AdminDashboard() {
               <>
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-2xl font-semibold text-slate-800">Alumni by Pass Out Year</h3>
-                  <Button className="bg-primary text-white" onClick={() => setShowAlumniManagement(true)}>
+                  <Button className="bg-primary text-white" onClick={() => setShowAddAlumniModal(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Alumni
                   </Button>
@@ -1529,16 +1540,13 @@ export default function AdminDashboard() {
               <>
                 <div className="flex justify-between items-center mb-4">
                   <button className="px-4 py-2 bg-slate-200 rounded" onClick={() => setSelectedAlumniYear(null)}>Back</button>
-                  <Button className="bg-primary text-white" onClick={() => setShowAlumniManagement(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Alumni
-                  </Button>
                 </div>
                 <AlumniList 
                   alumni={alumniNav} 
                   onSelect={setSelectedAlumni}
                   onEdit={(alumni) => {
-                    setShowAlumniManagement(true);
+                    setEditingAlumni(alumni);
+                    setShowEditAlumniModal(true);
                   }}
                   onDelete={async (alumniId) => {
                     try {
@@ -1554,6 +1562,7 @@ export default function AdminDashboard() {
                       toast({ title: 'Error', description: 'Failed to delete alumni', variant: 'destructive' });
                     }
                   }}
+                  onAddNew={() => setShowAddAlumniModal(true)}
                 />
               </>
             ) : (
@@ -1630,7 +1639,7 @@ export default function AdminDashboard() {
                   Close
                 </Button>
               </div>
-              <AlumniManagement />
+              <AlumniManagement onAddAlumni={() => {}} />
             </div>
           </div>
         </div>
@@ -1655,6 +1664,21 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+
+
+      {/* Add Alumni Modal */}
+      <AddAlumniModal 
+        open={showAddAlumniModal}
+        onOpenChange={setShowAddAlumniModal}
+      />
+
+      {/* Edit Alumni Modal */}
+      <EditAlumniModal 
+        open={showEditAlumniModal}
+        onOpenChange={setShowEditAlumniModal}
+        alumni={editingAlumni}
+      />
 
       {/* Attendance Modal */}
       <AttendanceModal 

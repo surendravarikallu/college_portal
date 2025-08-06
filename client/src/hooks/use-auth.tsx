@@ -33,23 +33,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: false,
   });
 
-  console.log("AuthProvider - Current user:", user);
-  console.log("AuthProvider - Error:", error);
-  console.log("AuthProvider - Loading:", isLoading);
-
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      console.log("Login successful, setting user data:", user);
       queryClient.setQueryData(["/api/user"], user);
       // Invalidate and refetch user data
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: Error) => {
-      console.error("Login failed:", error);
       toast({
         title: "Login failed",
         description: error.message,

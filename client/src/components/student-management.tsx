@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertStudentSchema, Student } from "@shared/schema";
+import { DriveDetail, StudentDriveDetails } from "@/types/drive-details";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +20,7 @@ import { Plus, Edit, Trash2, Users, UserCheck, Building, Search } from "lucide-r
 const studentFormSchema = insertStudentSchema.extend({
   year: z.number().min(1, "Year is required").max(4, "Year must be between 1-4"),
   package: z.number().optional(),
+  driveDetails: z.string().optional(),
 });
 
 type StudentForm = z.infer<typeof studentFormSchema>;
@@ -27,7 +29,13 @@ export function StudentManagement() {
   const [showStudentModal, setShowStudentModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [offerLetterFile, setOfferLetterFile] = useState<File | null>(null);
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [driveDetails, setDriveDetails] = useState<StudentDriveDetails>({
+    drives: [],
+    totalDrives: 0,
+    totalRoundsQualified: 0,
+  });
   const [searchFilter, setSearchFilter] = useState<"all" | "name" | "rollNumber" | "branch" | "email">("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -78,6 +86,7 @@ export function StudentManagement() {
       companyName: "",
       package: undefined,
       role: "",
+      driveDetails: JSON.stringify({ drives: [], totalDrives: 0, totalRoundsQualified: 0 }),
     },
   });
 
@@ -246,6 +255,9 @@ export function StudentManagement() {
       if (offerLetterFile) {
         formData.append('offerLetter', offerLetterFile);
       }
+      if (idCardFile) {
+        formData.append('idCard', idCardFile);
+      }
 
       if (editingStudent) {
         await updateStudentMutation.mutateAsync(formData as any);
@@ -273,6 +285,74 @@ export function StudentManagement() {
         event.target.value = '';
       }
     }
+  };
+
+  const handleIdCardChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Check file type (PDF or images)
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (allowedTypes.includes(file.type)) {
+        setIdCardFile(file);
+      } else {
+        toast({
+          title: "Invalid file type",
+          description: "Please select a PDF, JPEG, JPG, or PNG file.",
+          variant: "destructive",
+        });
+        event.target.value = '';
+      }
+    }
+  };
+
+  const addDriveDetail = () => {
+    const newDrive: DriveDetail = {
+      id: Date.now().toString(),
+      companyName: "",
+      date: new Date().toISOString().split('T')[0],
+      roundsQualified: 0,
+      failedRound: "",
+      notes: "",
+    };
+    
+    const updatedDrives = [...driveDetails.drives, newDrive];
+    const updatedDetails = {
+      ...driveDetails,
+      drives: updatedDrives,
+      totalDrives: updatedDrives.length,
+      totalRoundsQualified: updatedDrives.reduce((sum, drive) => sum + drive.roundsQualified, 0),
+    };
+    
+    setDriveDetails(updatedDetails);
+    form.setValue("driveDetails", JSON.stringify(updatedDetails));
+  };
+
+  const updateDriveDetail = (id: string, field: keyof DriveDetail, value: any) => {
+    const updatedDrives = driveDetails.drives.map(drive => 
+      drive.id === id ? { ...drive, [field]: value } : drive
+    );
+    
+    const updatedDetails = {
+      ...driveDetails,
+      drives: updatedDrives,
+      totalRoundsQualified: updatedDrives.reduce((sum, drive) => sum + drive.roundsQualified, 0),
+    };
+    
+    setDriveDetails(updatedDetails);
+    form.setValue("driveDetails", JSON.stringify(updatedDetails));
+  };
+
+  const removeDriveDetail = (id: string) => {
+    const updatedDrives = driveDetails.drives.filter(drive => drive.id !== id);
+    const updatedDetails = {
+      ...driveDetails,
+      drives: updatedDrives,
+      totalDrives: updatedDrives.length,
+      totalRoundsQualified: updatedDrives.reduce((sum, drive) => sum + drive.roundsQualified, 0),
+    };
+    
+    setDriveDetails(updatedDetails);
+    form.setValue("driveDetails", JSON.stringify(updatedDetails));
   };
 
   // Group students by branch, batch, and batch year
@@ -401,9 +481,9 @@ export function StudentManagement() {
                                     </Badge>
                                   )}
                                 </div>
-                                {student.selected && student.companyName && (
+                                {student.selected ? (
                                   <div className="mb-2 p-2 bg-green-50 rounded text-xs">
-                                    <p className="font-medium text-green-800">{student.companyName}</p>
+                                    {student.companyName && <p className="font-medium text-green-800">{student.companyName}</p>}
                                     {student.role && <p className="text-green-600">{student.role}</p>}
                                     {student.package && <p className="text-green-600">₹{student.package} LPA</p>}
                                     {student.offerLetterUrl && (
@@ -418,6 +498,48 @@ export function StudentManagement() {
                                         </a>
                                       </p>
                                     )}
+                                    {student.idCardUrl && (
+                                      <p className="text-green-600 mt-1">
+                                        <a 
+                                          href={student.idCardUrl} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="underline hover:text-green-800"
+                                        >
+                                          View ID Card
+                                        </a>
+                                      </p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="mb-2 p-2 bg-red-50 rounded text-xs">
+                                    <p className="font-medium text-red-800">Not Placed</p>
+                                    {(() => {
+                                      try {
+                                        const driveData = student.driveDetails ? JSON.parse(student.driveDetails) : { drives: [], totalDrives: 0, totalRoundsQualified: 0 };
+                                        return (
+                                          <>
+                                            <p className="text-red-600">Total Drives: {driveData.totalDrives}</p>
+                                            <p className="text-red-600">Total Rounds Qualified: {driveData.totalRoundsQualified}</p>
+                                            {driveData.drives.length > 0 && (
+                                              <div className="mt-2 space-y-1">
+                                                {driveData.drives.slice(0, 2).map((drive: any, index: number) => (
+                                                  <div key={drive.id || index} className="border-l-2 border-red-300 pl-2">
+                                                    <p className="text-red-700 text-xs">{drive.companyName}</p>
+                                                    <p className="text-red-600 text-xs">Failed at: {drive.failedRound}</p>
+                                                  </div>
+                                                ))}
+                                                {driveData.drives.length > 2 && (
+                                                  <p className="text-red-600 text-xs">+{driveData.drives.length - 2} more drives</p>
+                                                )}
+                                              </div>
+                                            )}
+                                          </>
+                                        );
+                                      } catch {
+                                        return <p className="text-red-600">No drive data available</p>;
+                                      }
+                                    })()}
                                   </div>
                                 )}
                                 <div className="flex space-x-2 mt-3">
@@ -587,6 +709,113 @@ export function StudentManagement() {
                 <Label htmlFor="selected">Student is placed</Label>
               </div>
 
+              {!form.watch("selected") && (
+                <>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-base font-medium">Drive Details</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addDriveDetail}
+                      >
+                        Add Drive
+                      </Button>
+                    </div>
+                    
+                    {driveDetails.drives.length === 0 ? (
+                      <div className="text-center py-4 text-slate-500">
+                        No drives added yet. Click "Add Drive" to start tracking.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {driveDetails.drives.map((drive, index) => (
+                          <div key={drive.id} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex justify-between items-center">
+                              <h4 className="font-medium">Drive #{index + 1}</h4>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeDriveDetail(drive.id)}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor={`company-${drive.id}`}>Company Name</Label>
+                                <Input
+                                  id={`company-${drive.id}`}
+                                  value={drive.companyName}
+                                  onChange={(e) => updateDriveDetail(drive.id, 'companyName', e.target.value)}
+                                  placeholder="e.g., TCS, Infosys"
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor={`date-${drive.id}`}>Drive Date</Label>
+                                <Input
+                                  id={`date-${drive.id}`}
+                                  type="date"
+                                  value={drive.date}
+                                  onChange={(e) => updateDriveDetail(drive.id, 'date', e.target.value)}
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor={`rounds-${drive.id}`}>Rounds Qualified</Label>
+                                <Input
+                                  id={`rounds-${drive.id}`}
+                                  type="number"
+                                  min="0"
+                                  value={drive.roundsQualified}
+                                  onChange={(e) => updateDriveDetail(drive.id, 'roundsQualified', parseInt(e.target.value) || 0)}
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor={`failed-${drive.id}`}>Failed at Round</Label>
+                                <Input
+                                  id={`failed-${drive.id}`}
+                                  value={drive.failedRound}
+                                  onChange={(e) => updateDriveDetail(drive.id, 'failedRound', e.target.value)}
+                                  placeholder="e.g., Technical Round, HR Round"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`notes-${drive.id}`}>Notes (Optional)</Label>
+                              <Input
+                                id={`notes-${drive.id}`}
+                                value={drive.notes || ""}
+                                onChange={(e) => updateDriveDetail(drive.id, 'notes', e.target.value)}
+                                placeholder="Additional notes about this drive"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        
+                        <div className="bg-slate-50 p-3 rounded-lg">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium">Total Drives:</span> {driveDetails.totalDrives}
+                            </div>
+                            <div>
+                              <span className="font-medium">Total Rounds Qualified:</span> {driveDetails.totalRoundsQualified}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
               {form.watch("selected") && (
                     <>
                       <div>
@@ -639,9 +868,20 @@ export function StudentManagement() {
                           id="offerLetter"
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => setOfferLetterFile(e.target.files?.[0] || null)}
+                          onChange={handleOfferLetterChange}
                         />
                         <p className="text-xs text-slate-500 mt-1">Upload offer letter (PDF or image format)</p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="idCard">ID Card (PDF/Image)</Label>
+                        <Input
+                          id="idCard"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={handleIdCardChange}
+                        />
+                        <p className="text-xs text-slate-500 mt-1">Upload ID card (PDF or image format)</p>
                       </div>
                     </>
                   )}

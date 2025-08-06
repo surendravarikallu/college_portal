@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,21 +7,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertAlumniSchema, Alumni } from "@shared/schema";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Edit, Trash2, GraduationCap, User, Calendar, Search } from "lucide-react";
 
 const alumniFormSchema = insertAlumniSchema.extend({
   passOutYear: z.number().min(1900, "Invalid year").max(new Date().getFullYear(), "Year cannot be in future"),
+  package: z.number().optional(),
 });
 
 type AlumniForm = z.infer<typeof alumniFormSchema>;
 
-export function AlumniManagement() {
+interface AlumniManagementProps {
+  onAddAlumni?: () => void;
+}
+
+export function AlumniManagement({ onAddAlumni }: AlumniManagementProps) {
   const [showAlumniModal, setShowAlumniModal] = useState(false);
   const [editingAlumni, setEditingAlumni] = useState<Alumni | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,6 +62,9 @@ export function AlumniManagement() {
           alumniData.email.toLowerCase().includes(searchLower) ||
           alumniData.passOutYear.toString().includes(searchLower) ||
           alumniData.higherEducationCollege?.toLowerCase().includes(searchLower) ||
+          alumniData.company?.toLowerCase().includes(searchLower) ||
+          alumniData.role?.toLowerCase().includes(searchLower) ||
+          alumniData.currentStatus?.toLowerCase().includes(searchLower) ||
           alumniData.address.toLowerCase().includes(searchLower) ||
           alumniData.contactNumber.includes(searchLower)
         );
@@ -68,23 +77,85 @@ export function AlumniManagement() {
       name: "",
       rollNumber: "",
       passOutYear: new Date().getFullYear(),
+      currentStatus: "higher_education" as const,
       higherEducationCollege: "",
       collegeRollNumber: "",
+      company: "",
+      package: undefined,
+      role: "",
+      offerLetterUrl: "",
+      idCardUrl: "",
       address: "",
       contactNumber: "",
       email: "",
     },
   });
 
+  // Expose the add alumni function to parent component
+  useEffect(() => {
+    if (onAddAlumni) {
+      // Create a function that can be called from parent
+      const addAlumniFunction = () => {
+        setEditingAlumni(null);
+        form.reset({
+          name: "",
+          rollNumber: "",
+          passOutYear: new Date().getFullYear(),
+          currentStatus: "higher_education" as const,
+          higherEducationCollege: "",
+          collegeRollNumber: "",
+          company: "",
+          package: undefined,
+          role: "",
+          offerLetterUrl: "",
+          idCardUrl: "",
+          address: "",
+          contactNumber: "",
+          email: "",
+        });
+        setShowAlumniModal(true);
+      };
+      
+      // Store the function in a way that parent can access
+      (window as any).openAddAlumniModal = addAlumniFunction;
+    }
+  }, [onAddAlumni, form]);
+
   const createAlumniMutation = useMutation({
     mutationFn: async (data: AlumniForm) => {
-      const response = await apiRequest("POST", "/api/alumni", data);
+      const formData = new FormData();
+      
+      // Add all form data
+      Object.keys(data).forEach(key => {
+        if (data[key as keyof AlumniForm] !== undefined && data[key as keyof AlumniForm] !== null) {
+          if (key === 'offerLetterUrl' || key === 'idCardUrl') {
+            // Handle file uploads
+            const fileInput = document.getElementById(key) as HTMLInputElement;
+            if (fileInput?.files?.[0]) {
+              formData.append(key, fileInput.files[0]);
+            }
+          } else {
+            formData.append(key, String(data[key as keyof AlumniForm]));
+          }
+        }
+      });
+
+      const response = await fetch('/api/alumni', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create alumni');
+      }
+      
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Alumni record created successfully!",
+        description: "Alumni created successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/alumni"] });
       handleCloseModal();
@@ -100,14 +171,41 @@ export function AlumniManagement() {
 
   const updateAlumniMutation = useMutation({
     mutationFn: async (data: AlumniForm) => {
-      if (!editingAlumni) return;
-      const response = await apiRequest("PUT", `/api/alumni/${editingAlumni.id}`, data);
+      if (!editingAlumni) throw new Error("No alumni selected for editing");
+      
+      const formData = new FormData();
+      
+      // Add all form data
+      Object.keys(data).forEach(key => {
+        if (data[key as keyof AlumniForm] !== undefined && data[key as keyof AlumniForm] !== null) {
+          if (key === 'offerLetterUrl' || key === 'idCardUrl') {
+            // Handle file uploads
+            const fileInput = document.getElementById(key) as HTMLInputElement;
+            if (fileInput?.files?.[0]) {
+              formData.append(key, fileInput.files[0]);
+            }
+          } else {
+            formData.append(key, String(data[key as keyof AlumniForm]));
+          }
+        }
+      });
+
+      const response = await fetch(`/api/alumni/${editingAlumni.id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update alumni');
+      }
+      
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Alumni record updated successfully!",
+        description: "Alumni updated successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/alumni"] });
       handleCloseModal();
@@ -123,12 +221,22 @@ export function AlumniManagement() {
 
   const deleteAlumniMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/alumni/${id}`);
+      const response = await fetch(`/api/alumni/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete alumni');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Alumni record deleted successfully!",
+        description: "Alumni deleted successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/alumni"] });
     },
@@ -147,8 +255,14 @@ export function AlumniManagement() {
       name: "",
       rollNumber: "",
       passOutYear: new Date().getFullYear(),
+      currentStatus: "higher_education" as const,
       higherEducationCollege: "",
       collegeRollNumber: "",
+      company: "",
+      package: undefined,
+      role: "",
+      offerLetterUrl: "",
+      idCardUrl: "",
       address: "",
       contactNumber: "",
       email: "",
@@ -162,8 +276,14 @@ export function AlumniManagement() {
       name: alumniData.name,
       rollNumber: alumniData.rollNumber,
       passOutYear: alumniData.passOutYear,
+      currentStatus: (alumniData.currentStatus as "higher_education" | "job") || "higher_education",
       higherEducationCollege: alumniData.higherEducationCollege || "",
       collegeRollNumber: alumniData.collegeRollNumber || "",
+      company: alumniData.company || "",
+      package: alumniData.package || undefined,
+      role: alumniData.role || "",
+      offerLetterUrl: alumniData.offerLetterUrl || "",
+      idCardUrl: alumniData.idCardUrl || "",
       address: alumniData.address,
       contactNumber: alumniData.contactNumber,
       email: alumniData.email,
@@ -308,10 +428,32 @@ export function AlumniManagement() {
                             <span className="font-medium text-slate-700">Contact:</span>
                             <p className="text-slate-600">{alumniData.contactNumber}</p>
                           </div>
-                          {alumniData.higherEducationCollege && (
+                          <div>
+                            <span className="font-medium text-slate-700">Status:</span>
+                            <p className="text-slate-600 capitalize">{alumniData.currentStatus?.replace('_', ' ') || 'Not specified'}</p>
+                          </div>
+                          {alumniData.currentStatus === "higher_education" && alumniData.higherEducationCollege && (
                             <div>
                               <span className="font-medium text-slate-700">Higher Education:</span>
                               <p className="text-slate-600">{alumniData.higherEducationCollege}</p>
+                            </div>
+                          )}
+                          {alumniData.currentStatus === "job" && alumniData.company && (
+                            <div>
+                              <span className="font-medium text-slate-700">Company:</span>
+                              <p className="text-slate-600">{alumniData.company}</p>
+                            </div>
+                          )}
+                          {alumniData.currentStatus === "job" && alumniData.role && (
+                            <div>
+                              <span className="font-medium text-slate-700">Role:</span>
+                              <p className="text-slate-600">{alumniData.role}</p>
+                            </div>
+                          )}
+                          {alumniData.currentStatus === "job" && alumniData.package && (
+                            <div>
+                              <span className="font-medium text-slate-700">Package:</span>
+                              <p className="text-slate-600">{alumniData.package} LPA</p>
                             </div>
                           )}
                           <div>
@@ -431,6 +573,111 @@ export function AlumniManagement() {
             </div>
 
             <div>
+              <Label>Current Status</Label>
+              <Controller
+                name="currentStatus"
+                control={form.control}
+                render={({ field }) => (
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-col space-y-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="higher_education" id="higher_education" />
+                      <Label htmlFor="higher_education">Higher Education</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="job" id="job" />
+                      <Label htmlFor="job">Job</Label>
+                    </div>
+                  </RadioGroup>
+                )}
+              />
+              {form.formState.errors.currentStatus && (
+                <p className="text-sm text-red-500 mt-1">
+                  {form.formState.errors.currentStatus.message}
+                </p>
+              )}
+            </div>
+
+            {form.watch("currentStatus") === "higher_education" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="higherEducationCollege">Higher Education College</Label>
+                  <Input
+                    id="higherEducationCollege"
+                    placeholder="University/College name"
+                    {...form.register("higherEducationCollege")}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="collegeRollNumber">Higher Ed Roll Number</Label>
+                  <Input
+                    id="collegeRollNumber"
+                    placeholder="University roll number"
+                    {...form.register("collegeRollNumber")}
+                  />
+                </div>
+              </div>
+            )}
+
+            {form.watch("currentStatus") === "job" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="company">Company Name</Label>
+                    <Input
+                      id="company"
+                      placeholder="Company name"
+                      {...form.register("company")}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="package">Package (LPA)</Label>
+                    <Input
+                      id="package"
+                      type="number"
+                      placeholder="e.g., 6.5"
+                      {...form.register("package", { valueAsNumber: true })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="role">Role/Position</Label>
+                    <Input
+                      id="role"
+                      placeholder="e.g., Software Engineer"
+                      {...form.register("role")}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="idCardUrl">ID Card (Mandatory)</Label>
+                    <Input
+                      id="idCardUrl"
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      {...form.register("idCardUrl")}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="offerLetterUrl">Offer Letter (Optional)</Label>
+                  <Input
+                    id="offerLetterUrl"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    placeholder="Upload offer letter"
+                    {...form.register("offerLetterUrl")}
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
               <Label htmlFor="address">Address</Label>
               <Textarea
                 id="address"
@@ -442,25 +689,6 @@ export function AlumniManagement() {
                   {form.formState.errors.address.message}
                 </p>
               )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="higherEducationCollege">Higher Education College (Optional)</Label>
-                <Input
-                  id="higherEducationCollege"
-                  placeholder="University/College name"
-                  {...form.register("higherEducationCollege")}
-                />
-              </div>
-              <div>
-                <Label htmlFor="collegeRollNumber">Higher Ed Roll Number (Optional)</Label>
-                <Input
-                  id="collegeRollNumber"
-                  placeholder="University roll number"
-                  {...form.register("collegeRollNumber")}
-                />
-              </div>
             </div>
 
             <div className="flex space-x-2">

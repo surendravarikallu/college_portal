@@ -65,7 +65,7 @@ export default function HomePage() {
     testImages.forEach((src, index) => {
       const img = new Image();
       img.onload = () => {
-        console.log(`✅ Logo ${index + 1} loaded successfully:`, src);
+        // Logo loaded successfully
       };
       img.onerror = () => {
         console.error(`❌ Failed to load logo ${index + 1}:`, src);
@@ -136,10 +136,7 @@ export default function HomePage() {
     staleTime: 0,
   });
 
-  // Debug logging
-  console.log("Events data:", events);
-  console.log("Events loading:", eventsLoading);
-  console.log("Events error:", eventsError);
+  // Debug logging removed for cleaner console
 
   // Filter events based on search term
   const filterEvents = (eventList: Event[]) => {
@@ -413,114 +410,6 @@ export default function HomePage() {
                 </CardContent>
               </Card>
 
-              {/* Placement Stuff Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Briefcase className="w-5 h-5 text-green-600 mr-3" />
-                    Placement Stuff
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {placementStuff.length === 0 ? (
-                      <div className="space-y-4">
-                        {defaultPlacementStuff.map((item) => (
-                          <a 
-                            key={item.id} 
-                            href={item.link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="block group hover:bg-slate-50 rounded-lg p-3 transition-colors border border-slate-200 hover:border-green-500/20"
-                          >
-                            <div className="flex items-start space-x-3">
-                              <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-slate-800 group-hover:text-green-600 transition-colors line-clamp-2">
-                                  {item.title}
-                                </h3>
-                                <p className="text-slate-600 text-sm mt-1 line-clamp-3">
-                                  {item.description}
-                                </p>
-                                <div className="flex items-center justify-between mt-2">
-                                  <span className="text-xs text-slate-500 flex items-center">
-                                    <Calendar className="w-3 h-3 mr-1" />
-                                    {new Date(item.createdAt).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: 'numeric'
-                                    })}
-                                  </span>
-                                  <span className="inline-flex items-center text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                                    <ExternalLink className="w-3 h-3 mr-1" />
-                                    Link
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-                    ) : (
-                      placementStuff.slice(0, 4).map((item) => (
-                        <a 
-                          key={item.id} 
-                          href={item.link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="block group hover:bg-slate-50 rounded-lg p-3 transition-colors border border-slate-200 hover:border-green-500/20"
-                        >
-                          <div className="flex items-start space-x-3">
-                            <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-slate-800 group-hover:text-green-600 transition-colors line-clamp-2">
-                                {item.title}
-                              </h3>
-                              <p className="text-slate-600 text-sm mt-1 line-clamp-3">
-                                {item.description.length > 120 
-                                  ? `${item.description.substring(0, 120)}...` 
-                                  : item.description}
-                              </p>
-                              <div className="flex items-center justify-between mt-2">
-                                <span className="text-xs text-slate-500 flex items-center">
-                                  <Calendar className="w-3 h-3 mr-1" />
-                                  {new Date(item.createdAt).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </span>
-                                <span className="inline-flex items-center text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                                  {item.link && isPDFLink(item.link) ? (
-                                    <>
-                                      <FileText className="w-3 h-3 mr-1" />
-                                      PDF
-                                    </>
-                                  ) : (
-                                    <>
-                                      <ExternalLink className="w-3 h-3 mr-1" />
-                                      Link
-                                    </>
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </a>
-                      ))
-                    )}
-                    {placementStuff.length > 4 && (
-                      <div className="text-center pt-2">
-                        <p className="text-sm text-slate-500">
-                          +{placementStuff.length - 4} more placement items
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
             {/* Notifications Section */}
             <Card>
               <CardHeader>
@@ -598,6 +487,114 @@ export default function HomePage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Placement Stuff Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Briefcase className="w-5 h-5 text-green-600 mr-3" />
+                Placement Stuff
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {placementStuff.length === 0 ? (
+                  <div className="space-y-4">
+                    {defaultPlacementStuff.map((item) => (
+                      <a 
+                        key={item.id} 
+                        href={item.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block group hover:bg-slate-50 rounded-lg p-3 transition-colors border border-slate-200 hover:border-green-500/20"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-slate-800 group-hover:text-green-600 transition-colors line-clamp-2">
+                              {item.title}
+                            </h3>
+                            <p className="text-slate-600 text-sm mt-1 line-clamp-3">
+                              {item.description}
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-slate-500 flex items-center">
+                                <Calendar className="w-3 h-3 mr-1" />
+                                {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </span>
+                              <span className="inline-flex items-center text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Link
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  placementStuff.slice(0, 4).map((item) => (
+                    <a 
+                      key={item.id} 
+                      href={item.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block group hover:bg-slate-50 rounded-lg p-3 transition-colors border border-slate-200 hover:border-green-500/20"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-slate-800 group-hover:text-green-600 transition-colors line-clamp-2">
+                            {item.title}
+                          </h3>
+                          <p className="text-slate-600 text-sm mt-1 line-clamp-3">
+                            {item.description.length > 120 
+                              ? `${item.description.substring(0, 120)}...` 
+                              : item.description}
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-slate-500 flex items-center">
+                              <Calendar className="w-3 h-3 mr-1" />
+                              {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </span>
+                            <span className="inline-flex items-center text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                              {item.link && isPDFLink(item.link) ? (
+                                <>
+                                  <FileText className="w-3 h-3 mr-1" />
+                                  PDF
+                                </>
+                              ) : (
+                                <>
+                                  <ExternalLink className="w-3 h-3 mr-1" />
+                                  Link
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  ))
+                )}
+                {placementStuff.length > 4 && (
+                  <div className="text-center pt-2">
+                    <p className="text-sm text-slate-500">
+                      +{placementStuff.length - 4} more placement items
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
             {/* Events Section */}
             <Card id="events">

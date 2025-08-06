@@ -440,14 +440,15 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/students", upload.fields([
-    { name: 'offerLetter', maxCount: 1 }
+    { name: 'offerLetter', maxCount: 1 },
+    { name: 'idCard', maxCount: 1 }
   ]), validateFileUpload, async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
-      const { name, rollNumber, branch, year, email, phone, selected, companyName, package: packageAmount, role } = req.body;
+      const { name, rollNumber, branch, year, email, phone, selected, companyName, package: packageAmount, role, driveDetails } = req.body;
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
       // Simple validation
@@ -472,6 +473,9 @@ export function registerRoutes(app: Express): Server {
       // Handle boolean field
       studentData.selected = selected === true || selected === 'true';
 
+      // Handle drive details for not placed students
+      if (driveDetails !== undefined && driveDetails !== "") studentData.driveDetails = driveDetails;
+
       // Handle offer letter file upload
       if (files.offerLetter && files.offerLetter[0]) {
         const file = files.offerLetter[0];
@@ -479,6 +483,15 @@ export function registerRoutes(app: Express): Server {
         const filePath = path.join(uploadDir, fileName);
         fs.writeFileSync(filePath, file.buffer);
         studentData.offerLetterUrl = `/uploads/${fileName}`;
+      }
+
+      // Handle ID card file upload
+      if (files.idCard && files.idCard[0]) {
+        const file = files.idCard[0];
+        const fileName = `idcard_${Date.now()}_${file.originalname}`;
+        const filePath = path.join(uploadDir, fileName);
+        fs.writeFileSync(filePath, file.buffer);
+        studentData.idCardUrl = `/uploads/${fileName}`;
       }
 
       console.log("Final student data being sent to database:", studentData);
@@ -502,14 +515,15 @@ export function registerRoutes(app: Express): Server {
 
   app.put("/api/students/:id", upload.fields([
     { name: 'photo', maxCount: 1 },
-    { name: 'offerLetter', maxCount: 1 }
+    { name: 'offerLetter', maxCount: 1 },
+    { name: 'idCard', maxCount: 1 }
   ]), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
       const id = parseInt(req.params.id);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const { name, rollNumber, branch, year, email, phone, selected, companyName, package: packageAmount, role } = req.body;
+      const { name, rollNumber, branch, year, email, phone, selected, companyName, package: packageAmount, role, driveDetails } = req.body;
 
       console.log("Update student request body:", req.body);
       console.log("Update student files:", files);
@@ -532,12 +546,18 @@ export function registerRoutes(app: Express): Server {
         studentData.selected = selected === true || selected === 'true';
       }
 
+      // Handle drive details for not placed students
+      if (driveDetails !== undefined && driveDetails !== "") studentData.driveDetails = driveDetails;
+
       // Handle file uploads
       if (files?.photo && files.photo[0]) {
         studentData.photoUrl = `/uploads/${files.photo[0].filename}`;
       }
       if (files?.offerLetter && files.offerLetter[0]) {
         studentData.offerLetterUrl = `/uploads/${files.offerLetter[0].filename}`;
+      }
+      if (files?.idCard && files.idCard[0]) {
+        studentData.idCardUrl = `/uploads/${files.idCard[0].filename}`;
       }
 
       console.log("Final student update data:", studentData);
@@ -586,9 +606,41 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/alumni", async (req, res) => {
+  app.post("/api/alumni", upload.fields([
+    { name: 'offerLetterUrl', maxCount: 1 },
+    { name: 'idCardUrl', maxCount: 1 }
+  ]), async (req, res) => {
     try {
-      const validatedData = insertAlumniSchema.parse(req.body);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const alumniData = { ...req.body };
+
+      console.log("Original alumniData:", alumniData);
+      console.log("passOutYear type:", typeof alumniData.passOutYear, "value:", alumniData.passOutYear);
+      console.log("package type:", typeof alumniData.package, "value:", alumniData.package);
+
+      // Convert string values to numbers for fields that expect numbers
+      if (alumniData.passOutYear) {
+        const originalPassOutYear = alumniData.passOutYear;
+        alumniData.passOutYear = parseInt(alumniData.passOutYear);
+        console.log("Converted passOutYear from", originalPassOutYear, "to", alumniData.passOutYear, "type:", typeof alumniData.passOutYear);
+      }
+      if (alumniData.package && alumniData.package !== '') {
+        const originalPackage = alumniData.package;
+        alumniData.package = parseFloat(alumniData.package);
+        console.log("Converted package from", originalPackage, "to", alumniData.package, "type:", typeof alumniData.package);
+      }
+
+      console.log("Final alumniData before validation:", alumniData);
+
+      // Handle file uploads
+      if (files?.offerLetterUrl && files.offerLetterUrl[0]) {
+        alumniData.offerLetterUrl = `/uploads/${files.offerLetterUrl[0].filename}`;
+      }
+      if (files?.idCardUrl && files.idCardUrl[0]) {
+        alumniData.idCardUrl = `/uploads/${files.idCardUrl[0].filename}`;
+      }
+
+      const validatedData = insertAlumniSchema.parse(alumniData);
       const alumni = await storage.createAlumni(validatedData);
       res.status(201).json(alumni);
     } catch (error: any) {
@@ -601,12 +653,17 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/alumni/:id", async (req, res) => {
+  app.put("/api/alumni/:id", upload.fields([
+    { name: 'offerLetterUrl', maxCount: 1 },
+    { name: 'idCardUrl', maxCount: 1 }
+  ]), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
       const id = parseInt(req.params.id);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const allowedFields = [
-        "name", "rollNumber", "passOutYear", "higherEducationCollege", "collegeRollNumber", "address", "contactNumber", "email"
+        "name", "rollNumber", "passOutYear", "currentStatus", "higherEducationCollege", "collegeRollNumber", 
+        "company", "package", "role", "offerLetterUrl", "idCardUrl", "address", "contactNumber", "email"
       ];
       const updateData: Record<string, any> = {};
       for (const key of allowedFields) {
@@ -614,6 +671,23 @@ export function registerRoutes(app: Express): Server {
           updateData[key] = req.body[key];
         }
       }
+
+      // Convert string values to numbers for fields that expect numbers
+      if (updateData.passOutYear) {
+        updateData.passOutYear = parseInt(updateData.passOutYear);
+      }
+      if (updateData.package && updateData.package !== '') {
+        updateData.package = parseFloat(updateData.package);
+      }
+
+      // Handle file uploads
+      if (files?.offerLetterUrl && files.offerLetterUrl[0]) {
+        updateData.offerLetterUrl = `/uploads/${files.offerLetterUrl[0].filename}`;
+      }
+      if (files?.idCardUrl && files.idCardUrl[0]) {
+        updateData.idCardUrl = `/uploads/${files.idCardUrl[0].filename}`;
+      }
+
       const validatedData = insertAlumniSchema.partial().parse(updateData);
       const updatedAlumni = await storage.updateAlumni(id, validatedData);
       if (!updatedAlumni) {
@@ -1219,6 +1293,7 @@ export function registerRoutes(app: Express): Server {
             case 'role':
             case 'photoUrl':
             case 'offerLetterUrl':
+            case 'idCardUrl':
             case 'batch':
               studentData[header] = value;
               break;
@@ -1239,6 +1314,19 @@ export function registerRoutes(app: Express): Server {
               break;
             case 'selected':
               studentData[header] = value.toLowerCase() === 'true';
+              break;
+            case 'driveDetails':
+              // Handle drive details as JSON string
+              try {
+                if (value.trim()) {
+                  // If it's a JSON string, validate it
+                  JSON.parse(value);
+                  studentData[header] = value;
+                }
+              } catch (e) {
+                // If it's not valid JSON, skip it
+                console.warn(`Invalid driveDetails JSON in row ${i + 2}: ${value}`);
+              }
               break;
           }
         });
@@ -1375,11 +1463,12 @@ export function registerRoutes(app: Express): Server {
         const values = parseCSVLine(row);
         const alumniData: any = {};
 
-        headers.forEach((header, index) => {
-          const value = values[index] || '';
+        for (let j = 0; j < headers.length; j++) {
+          const header = headers[j];
+          const value = values[j] || '';
           // Skip empty values for optional fields
           if (value === '' || value === undefined || value === null) {
-            return;
+            continue;
           }
           
           switch (header) {
@@ -1387,19 +1476,43 @@ export function registerRoutes(app: Express): Server {
             case 'rollNumber':
             case 'higherEducationCollege':
             case 'collegeRollNumber':
+            case 'company':
+            case 'role':
+            case 'offerLetterUrl':
+            case 'idCardUrl':
             case 'address':
             case 'contactNumber':
             case 'email':
               alumniData[header] = value;
               break;
             case 'passOutYear':
-              const numValue = parseInt(value);
-              if (!isNaN(numValue)) {
-                alumniData[header] = numValue;
+              const yearValue = parseInt(value);
+              if (!isNaN(yearValue) && yearValue >= 1900 && yearValue <= new Date().getFullYear()) {
+                alumniData[header] = yearValue;
+              } else {
+                errors.push(`Row ${i + 2}: passOutYear must be a valid year between 1900 and ${new Date().getFullYear()}`);
+                continue;
+              }
+              break;
+            case 'currentStatus':
+              if (value === 'higher_education' || value === 'job') {
+                alumniData[header] = value;
+              } else {
+                errors.push(`Row ${i + 2}: currentStatus must be either 'higher_education' or 'job'`);
+                continue;
+              }
+              break;
+            case 'package':
+              const packageValue = parseInt(value);
+              if (!isNaN(packageValue) && packageValue > 0) {
+                alumniData[header] = packageValue;
+              } else if (value !== '') {
+                errors.push(`Row ${i + 2}: package must be a positive number`);
+                continue;
               }
               break;
           }
-        });
+        }
 
         try {
           // Validate required fields
