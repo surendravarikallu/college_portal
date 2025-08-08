@@ -1,12 +1,8 @@
 // API for students section
+import { fetchWithCSRF } from '../lib/utils';
 
 export async function fetchAllStudents() {
-  const res = await fetch('/api/students', { 
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  });
+  const res = await fetchWithCSRF('/api/students');
   if (!res.ok) {
     console.error('Failed to fetch students:', res.status, res.statusText);
     throw new Error('Failed to fetch students');

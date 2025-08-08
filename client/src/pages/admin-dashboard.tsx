@@ -796,7 +796,19 @@ export default function AdminDashboard() {
       reportDiv.style.lineHeight = '1.4';
       reportDiv.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
       reportDiv.style.borderRadius = '8px';
-      reportDiv.innerHTML = reportContent;
+      // Sanitize HTML content to prevent XSS attacks
+      const sanitizeHTML = (html: string): string => {
+        // Remove any script tags and event handlers
+        return html
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/on\w+\s*=/gi, '')
+          .replace(/javascript:/gi, '')
+          .replace(/vbscript:/gi, '')
+          .replace(/data:text\/html/gi, '')
+          .replace(/data:application\/javascript/gi, '');
+      };
+      
+      reportDiv.innerHTML = sanitizeHTML(reportContent);
       
       document.body.appendChild(reportDiv);
       

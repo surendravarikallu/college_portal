@@ -235,28 +235,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Test route to verify routing works
-  app.post("/api/test", async (req, res) => {
-    console.log("=== BASIC TEST ROUTE ===");
-    res.json({ message: "Basic test route working" });
-  });
 
-  // Test student creation without any middleware
-  app.post("/api/students/create", async (req, res) => {
-    console.log("=== SIMPLE STUDENT CREATE ===");
-    console.log("Request body:", req.body);
-
-    try {
-      const student = await storage.createStudent({
-        name: "Test Student",
-        rollNumber: "TEST123",
-      });
-      res.json({ message: "Test student created", student });
-    } catch (error) {
-      console.error("Test student creation error:", error);
-      res.status(500).json({ message: "Test failed", error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
 
   // Event routes
   app.get("/api/events", async (req, res) => {
@@ -298,9 +277,7 @@ export function registerRoutes(app: Express): Server {
       if (eventData.endDate && typeof eventData.endDate === "string") {
         eventData.endDate = new Date(eventData.endDate);
       }
-      console.log("Event data before validation:", eventData);
       const validatedData = insertEventSchema.parse(eventData);
-      console.log("Event data after validation:", validatedData);
       const event = await storage.createEvent(validatedData);
       // Compute status
       const now = new Date();
@@ -405,39 +382,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Test route without file upload
-  app.post("/api/students/test", async (req, res) => {
-    console.log("=== TEST ROUTE ===");
-    console.log("Test route body:", req.body);
-    res.json({ message: "Test route working", body: req.body });
-  });
 
-  // Test route with authentication but no file upload
-  app.post("/api/students/simple", async (req, res) => {
-    console.log("=== SIMPLE STUDENT ROUTE ===");
-    console.log("Request body:", req.body);
-
-    if (!req.isAuthenticated()) {
-      console.log("Authentication failed");
-      return res.sendStatus(401);
-    }
-
-    console.log("Authentication passed");
-
-    try {
-      const studentData = { ...req.body };
-      console.log("Student data:", studentData);
-
-      // Test database connection
-      const allStudents = await storage.getAllStudents();
-      console.log("Database connection test - Current students count:", allStudents.length);
-
-      res.json({ message: "Simple route working", data: studentData });
-    } catch (error) {
-      console.error("Simple route error:", error);
-      res.status(500).json({ message: "Simple route error", error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
 
   app.post("/api/students", upload.fields([
     { name: 'offerLetter', maxCount: 1 },
@@ -467,7 +412,12 @@ export function registerRoutes(app: Express): Server {
       if (email) studentData.email = email;
       if (phone) studentData.phone = phone;
       if (companyName) studentData.companyName = companyName;
-      if (packageAmount) studentData.package = parseInt(packageAmount);
+      if (packageAmount && packageAmount !== "" && packageAmount !== "null" && packageAmount !== null) {
+        const parsedPackage = parseInt(packageAmount);
+        if (!isNaN(parsedPackage)) {
+          studentData.package = parsedPackage;
+        }
+      }
       if (role) studentData.role = role;
 
       // Handle boolean field
@@ -494,7 +444,7 @@ export function registerRoutes(app: Express): Server {
         studentData.idCardUrl = `/uploads/${fileName}`;
       }
 
-      console.log("Final student data being sent to database:", studentData);
+
 
       const student = await storage.createStudent(studentData);
       res.status(201).json(student);
@@ -525,8 +475,7 @@ export function registerRoutes(app: Express): Server {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const { name, rollNumber, branch, year, email, phone, selected, companyName, package: packageAmount, role, driveDetails } = req.body;
 
-      console.log("Update student request body:", req.body);
-      console.log("Update student files:", files);
+
 
       const studentData: any = {};
 
@@ -538,7 +487,12 @@ export function registerRoutes(app: Express): Server {
       if (email !== undefined) studentData.email = email;
       if (phone !== undefined) studentData.phone = phone;
       if (companyName !== undefined) studentData.companyName = companyName;
-      if (packageAmount !== undefined && packageAmount !== "") studentData.package = parseInt(packageAmount);
+      if (packageAmount !== undefined && packageAmount !== "" && packageAmount !== "null" && packageAmount !== null) {
+        const parsedPackage = parseInt(packageAmount);
+        if (!isNaN(parsedPackage)) {
+          studentData.package = parsedPackage;
+        }
+      }
       if (role !== undefined) studentData.role = role;
 
       // Handle boolean field
@@ -560,7 +514,7 @@ export function registerRoutes(app: Express): Server {
         studentData.idCardUrl = `/uploads/${files.idCard[0].filename}`;
       }
 
-      console.log("Final student update data:", studentData);
+
 
       const updatedStudent = await storage.updateStudent(id, studentData);
       if (!updatedStudent) {
@@ -571,6 +525,8 @@ export function registerRoutes(app: Express): Server {
       console.error("Student update error:", error);
       if (error.message === "Roll number already exists") {
         res.status(400).json({ message: "Roll number already exists" });
+      } else if (error.code === '22P02' && error.message.includes('NaN')) {
+        res.status(400).json({ message: "Invalid package amount. Please enter a valid number or leave empty for unplaced students." });
       } else {
         res.status(400).json({ message: "Failed to update student", error: error.message });
       }
@@ -614,23 +570,21 @@ export function registerRoutes(app: Express): Server {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const alumniData = { ...req.body };
 
-      console.log("Original alumniData:", alumniData);
-      console.log("passOutYear type:", typeof alumniData.passOutYear, "value:", alumniData.passOutYear);
-      console.log("package type:", typeof alumniData.package, "value:", alumniData.package);
+
 
       // Convert string values to numbers for fields that expect numbers
       if (alumniData.passOutYear) {
         const originalPassOutYear = alumniData.passOutYear;
         alumniData.passOutYear = parseInt(alumniData.passOutYear);
-        console.log("Converted passOutYear from", originalPassOutYear, "to", alumniData.passOutYear, "type:", typeof alumniData.passOutYear);
+
       }
       if (alumniData.package && alumniData.package !== '') {
         const originalPackage = alumniData.package;
         alumniData.package = parseFloat(alumniData.package);
-        console.log("Converted package from", originalPackage, "to", alumniData.package, "type:", typeof alumniData.package);
+
       }
 
-      console.log("Final alumniData before validation:", alumniData);
+
 
       // Handle file uploads
       if (files?.offerLetterUrl && files.offerLetterUrl[0]) {
@@ -1190,7 +1144,19 @@ export function registerRoutes(app: Express): Server {
         reportDiv.style.fontFamily = 'Arial, sans-serif';
         reportDiv.style.fontSize = '12px';
         reportDiv.style.lineHeight = '1.4';
-        reportDiv.innerHTML = reportContent;
+        // Sanitize HTML content to prevent XSS attacks
+        const sanitizeHTML = (html: string): string => {
+          // Remove any script tags and event handlers
+          return html
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/on\w+\s*=/gi, '')
+            .replace(/javascript:/gi, '')
+            .replace(/vbscript:/gi, '')
+            .replace(/data:text\/html/gi, '')
+            .replace(/data:application\/javascript/gi, '');
+        };
+        
+        reportDiv.innerHTML = sanitizeHTML(reportContent);
         
         document.body.appendChild(reportDiv);
         

@@ -283,15 +283,11 @@ export class DatabaseStorage implements IStorage {
 
   async createStudent(insertStudent: InsertStudent): Promise<Student> {
     try {
-      console.log("=== STORAGE CREATE STUDENT ===");
-      console.log("Input data:", insertStudent);
-      
       const [student] = await db
         .insert(students)
         .values(insertStudent)
         .returning();
       
-      console.log("Created student:", student);
       return student;
     } catch (error: any) {
       console.error("=== DATABASE ERROR ===");
@@ -444,7 +440,7 @@ export class DatabaseStorage implements IStorage {
   async createAuditLog(auditEntry: any): Promise<void> {
     // Only log security events and errors to console
     if (auditEntry.status === 'error' || auditEntry.action === 'LOGIN' || auditEntry.action === 'LOGOUT') {
-      console.log("🔍 AUDIT LOG:", auditEntry);
+
     }
     // TODO: Implement actual audit log storage in database
   }

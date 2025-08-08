@@ -3,6 +3,7 @@ export interface DriveDetail {
   companyName: string;
   date: string;
   roundsQualified: number;
+  roundsName: string; // Names/types of rounds qualified (e.g., "Aptitude, Technical, HR")
   failedRound: string;
   notes?: string;
 }

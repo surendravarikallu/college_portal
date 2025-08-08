@@ -1,7 +1,8 @@
 // API for events section
+import { fetchWithCSRF } from '../lib/utils';
 
 export async function fetchAllEvents() {
-  const res = await fetch('/api/events', { credentials: 'include' });
+  const res = await fetchWithCSRF('/api/events');
   if (!res.ok) throw new Error('Failed to fetch events');
   return res.json();
 }

@@ -1,7 +1,8 @@
--- Complete Database Schema for College Portal
+-- Complete Consolidated Database Schema for College Portal
 -- This file contains all tables and schema changes in one place
+-- Replaces all individual migration files for better memory usage
 
--- Create alumni table
+-- Create alumni table with all fields
 CREATE TABLE "alumni" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
@@ -55,7 +56,7 @@ CREATE TABLE "news" (
 	"updated_at" timestamp DEFAULT now()
 );
 
--- Create students table
+-- Create students table with all fields including drive tracking
 CREATE TABLE "students" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
@@ -69,8 +70,10 @@ CREATE TABLE "students" (
 	"selected" boolean DEFAULT false,
 	"company_name" text,
 	"offer_letter_url" text,
+	"id_card_url" text,
 	"package" integer,
 	"role" text,
+	"drive_details" text, -- JSON string containing detailed drive information
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
 	CONSTRAINT "students_roll_number_unique" UNIQUE("roll_number")
@@ -115,10 +118,25 @@ CREATE TABLE "important_notifications" (
 	"updated_at" timestamp DEFAULT now()
 );
 
+-- Create placement_stuff table
+CREATE TABLE "placement_stuff" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"title" text NOT NULL,
+	"description" text NOT NULL,
+	"link" text,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+
 -- Add foreign key constraints
 ALTER TABLE "attendance" ADD CONSTRAINT "attendance_event_id_events_id_fk" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE no action ON UPDATE no action;
 
 -- Insert default TPO user if not exists
 INSERT INTO "users" ("username", "name", "password", "role") 
 VALUES ('tpo_admin', 'TPO Administrator', '$2b$16$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.g.0O6m', 'tpo')
-ON CONFLICT ("username") DO NOTHING; 
+ON CONFLICT ("username") DO NOTHING;
+
+-- Insert default Admin user if not exists
+INSERT INTO "users" ("username", "name", "password", "role") 
+VALUES ('admin', 'System Administrator', '$2b$16$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj3bp.g.0O6m', 'admin')
+ON CONFLICT ("username") DO NOTHING;

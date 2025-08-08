@@ -33,6 +33,8 @@ interface StudentDetailsProps {
 export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(student);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [driveDetails, setDriveDetails] = useState<StudentDriveDetails>(() => {
     try {
       return student.driveDetails ? JSON.parse(student.driveDetails) : { drives: [], totalDrives: 0, totalRoundsQualified: 0 };
@@ -49,6 +51,9 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
   };
 
   const handleSave = async () => {
+    setIsSaving(true);
+    setError(null);
+    
     try {
       const response = await fetch(`/api/students/${student.id}`, {
         method: 'PUT',
@@ -64,16 +69,21 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
         onUpdate?.(updatedStudent);
         setIsEditing(false);
       } else {
-        console.error('Failed to update student');
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to update student');
       }
     } catch (error) {
       console.error('Error updating student:', error);
+      setError('Error updating student. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
     setFormData(student);
     setIsEditing(false);
+    setError(null);
     setDriveDetails(() => {
       try {
         return student.driveDetails ? JSON.parse(student.driveDetails) : { drives: [], totalDrives: 0, totalRoundsQualified: 0 };
@@ -89,6 +99,7 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
       companyName: "",
       date: new Date().toISOString().split('T')[0],
       roundsQualified: 0,
+      roundsName: "",
       failedRound: "",
       notes: "",
     };
@@ -139,16 +150,26 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-slate-800">Edit Student</h2>
           <div className="flex space-x-2">
-            <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+            <Button 
+              onClick={handleSave} 
+              className="bg-green-600 hover:bg-green-700"
+              disabled={isSaving}
+            >
               <Save className="w-4 h-4 mr-2" />
-              Save
+              {isSaving ? 'Saving...' : 'Save'}
             </Button>
-            <Button variant="outline" onClick={handleCancel}>
+            <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
               <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>
           </div>
         </div>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700">
+            {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
@@ -304,6 +325,17 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
                                 min="0"
                                 value={drive.roundsQualified}
                                 onChange={(e) => updateDriveDetail(drive.id, 'roundsQualified', parseInt(e.target.value) || 0)}
+                                className="mt-1"
+                              />
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor={`roundsName-${drive.id}`}>Rounds Name</Label>
+                              <Input
+                                id={`roundsName-${drive.id}`}
+                                value={drive.roundsName}
+                                onChange={(e) => updateDriveDetail(drive.id, 'roundsName', e.target.value)}
+                                placeholder="e.g., Aptitude, Technical, HR"
                                 className="mt-1"
                               />
                             </div>
@@ -572,6 +604,7 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
                                   <div className="space-y-1 text-sm">
                                     <p><span className="font-medium">Company:</span> {drive.companyName}</p>
                                     <p><span className="font-medium">Rounds Qualified:</span> {drive.roundsQualified}</p>
+                                    <p><span className="font-medium">Rounds Name:</span> {drive.roundsName}</p>
                                     <p><span className="font-medium">Failed at:</span> {drive.failedRound}</p>
                                     {drive.notes && (
                                       <p><span className="font-medium">Notes:</span> {drive.notes}</p>

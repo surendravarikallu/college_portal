@@ -76,12 +76,19 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
+  // Sanitize CSS content to prevent XSS
+  const sanitizeCSS = (css: string): string => {
+    // Only allow safe CSS properties and values
+    return css
+      .replace(/[<>]/g, '') // Remove any HTML tags
+      .replace(/javascript:/gi, '')
+      .replace(/expression\(/gi, '')
+      .replace(/url\(javascript:/gi, '');
+  };
+
+  const cssContent = Object.entries(THEMES)
+    .map(
+      ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
@@ -93,8 +100,13 @@ ${colorConfig
   .join("\n")}
 }
 `
-          )
-          .join("\n"),
+    )
+    .join("\n");
+
+  return (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: sanitizeCSS(cssContent),
       }}
     />
   )

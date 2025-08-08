@@ -16,11 +16,17 @@ A comprehensive **Training & Placement Office (TPO)** management system with ent
 - **User Profiles**: Name, username, role-based access
 
 ### **📚 Core Modules**
-- **Student Management**: Registration, bulk import/export
+- **Student Management**: Registration, bulk import/export, drive tracking
 - **Event Management**: Company events, year-wise organization
 - **Alumni Management**: Complete alumni database
 - **News & Notifications**: Dynamic content management
 - **Attendance Tracking**: Comprehensive attendance system
+
+### **📊 Drive Tracking System**
+- **Detailed Drive History**: Track company drives with round details
+- **Round Information**: Record rounds qualified and failed rounds
+- **Notes & Comments**: Add detailed feedback for each drive
+- **CSV Import/Export**: Bulk operations with drive details
 
 ## 🛡️ **Security Features (9.5/10 Score)**
 
@@ -57,7 +63,7 @@ npm install
 
 # Setup database
 createdb college_portal
-npx drizzle-kit push
+npm run db:migrate
 
 # Start development
 npm run dev
@@ -75,6 +81,35 @@ npm run dev
 - **Backend**: Node.js, Express, Passport.js
 - **Database**: PostgreSQL, Drizzle ORM
 - **Security**: Helmet, Rate Limiting, CSRF Protection
+
+## 📊 **Database Management**
+
+### **Consolidated Migration System**
+The project uses a consolidated migration approach for better memory usage and simplified database management:
+
+- **Single Migration File**: `migrations/complete_schema_consolidated.sql`
+- **All Tables Included**: Students, Alumni, Events, Attendance, Users, etc.
+- **Drive Tracking**: Complete drive history with round details
+- **Default Data**: Pre-configured users and constraints
+
+### **Migration Commands**
+```bash
+# Apply consolidated migration
+npm run db:migrate
+
+# Push schema changes (development)
+npm run db:push
+
+# Generate new migrations (if needed)
+npx drizzle-kit generate
+```
+
+### **Database Schema Features**
+- **Students Table**: Complete student profiles with drive tracking
+- **Alumni Table**: Placement details and higher education tracking
+- **Events Table**: Company events with attendance tracking
+- **Users Table**: Role-based access control
+- **Notifications**: Hero and important notifications system
 
 ## 📊 **Security Score: 9.5/10** 🟢
 

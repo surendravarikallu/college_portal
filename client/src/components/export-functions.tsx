@@ -1677,7 +1677,19 @@ export function ExportFunctions() {
           `;
       }
       
-      reportDiv.innerHTML = reportContent;
+      // Sanitize HTML content to prevent XSS attacks
+      const sanitizeHTML = (html: string): string => {
+        // Remove any script tags and event handlers
+        return html
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/on\w+\s*=/gi, '')
+          .replace(/javascript:/gi, '')
+          .replace(/vbscript:/gi, '')
+          .replace(/data:text\/html/gi, '')
+          .replace(/data:application\/javascript/gi, '');
+      };
+      
+      reportDiv.innerHTML = sanitizeHTML(reportContent);
       document.body.appendChild(reportDiv);
       
       // Convert to canvas and then to PDF

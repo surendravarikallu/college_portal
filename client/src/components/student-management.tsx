@@ -311,6 +311,7 @@ export function StudentManagement() {
       companyName: "",
       date: new Date().toISOString().split('T')[0],
       roundsQualified: 0,
+      roundsName: "",
       failedRound: "",
       notes: "",
     };
@@ -526,6 +527,7 @@ export function StudentManagement() {
                                                 {driveData.drives.slice(0, 2).map((drive: any, index: number) => (
                                                   <div key={drive.id || index} className="border-l-2 border-red-300 pl-2">
                                                     <p className="text-red-700 text-xs">{drive.companyName}</p>
+                                                    <p className="text-red-600 text-xs">Rounds: {drive.roundsName || 'Not specified'}</p>
                                                     <p className="text-red-600 text-xs">Failed at: {drive.failedRound}</p>
                                                   </div>
                                                 ))}
@@ -774,6 +776,16 @@ export function StudentManagement() {
                                   min="0"
                                   value={drive.roundsQualified}
                                   onChange={(e) => updateDriveDetail(drive.id, 'roundsQualified', parseInt(e.target.value) || 0)}
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor={`roundsName-${drive.id}`}>Rounds Name</Label>
+                                <Input
+                                  id={`roundsName-${drive.id}`}
+                                  value={drive.roundsName}
+                                  onChange={(e) => updateDriveDetail(drive.id, 'roundsName', e.target.value)}
+                                  placeholder="e.g., Aptitude, Technical, HR"
                                 />
                               </div>
                               

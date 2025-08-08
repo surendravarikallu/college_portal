@@ -11,6 +11,12 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL,
   },
-  // Use single migration file approach
+  // Use single migration file approach for better memory usage
   strict: false,
+  // Generate a single migration file
+  verbose: false,
+  // Disable migration generation to use manual consolidated file
+  migrations: {
+    disable: true
+  }
 });

@@ -26,7 +26,7 @@ app.use(cors({
 }));
 
 app.use(securityHeaders);
-// app.use(csrfTokenMiddleware); // Temporarily disabled for testing
+app.use(csrfTokenMiddleware); // CSRF protection enabled
 app.use(validateRequest);
 app.use(securityRateLimit);
 app.use(express.json({ limit: '10mb' }));
