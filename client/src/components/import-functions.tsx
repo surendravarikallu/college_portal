@@ -87,12 +87,19 @@ export function ImportFunctions() {
 
   const getCSVTemplate = () => {
     const templates = {
-      students: `name,rollNumber,branch,year,batch,email,phone,selected,companyName,package,role,photoUrl,offerLetterUrl,idCardUrl,driveDetails
-John Doe,2024001,CSE,3,2020-2024,john@example.com,1234567890,true,TCS,12,Software Engineer,https://example.com/photo.jpg,https://example.com/offer.pdf,https://example.com/id-card.pdf,
-Jane Smith,2024002,ECE,2,2020-2024,jane@example.com,1234567891,false,,,,,,,"{""drives"":[{""id"":""1"",""companyName"":""TCS"",""date"":""2024-01-15"",""roundsQualified"":2,""roundsName"":""Aptitude, Technical"",""failedRound"":""HR Round"",""notes"":""Good technical skills""},{""id"":""2"",""companyName"":""Infosys"",""date"":""2024-02-20"",""roundsQualified"":1,""roundsName"":""Aptitude"",""failedRound"":""Technical Round"",""notes"":""Need to improve coding skills""},{""id"":""3"",""companyName"":""Wipro"",""date"":""2024-03-10"",""roundsQualified"":3,""roundsName"":""Aptitude, Technical, HR"",""failedRound"":""Final Round"",""notes"":""Strong in aptitude""}],""totalDrives"":3,""totalRoundsQualified"":6}"
-Mike Johnson,2024003,CSE,4,2020-2024,mike@example.com,1234567892,true,Infosys,10,Developer,https://example.com/photo2.jpg,https://example.com/offer2.pdf,https://example.com/id-card2.pdf,
-Sarah Wilson,2024004,ECE,1,2021-2025,sarah@example.com,1234567893,false,,,,,,,"{""drives"":[{""id"":""4"",""companyName"":""Wipro"",""date"":""2024-02-20"",""roundsQualified"":1,""roundsName"":""Aptitude"",""failedRound"":""Technical Round"",""notes"":""Need more practice""},{""id"":""5"",""companyName"":""Infosys"",""date"":""2024-03-10"",""roundsQualified"":0,""roundsName"":""None"",""failedRound"":""Aptitude Round"",""notes"":""Aptitude needs improvement""},{""id"":""6"",""companyName"":""HCL"",""date"":""2024-04-05"",""roundsQualified"":2,""roundsName"":""Aptitude, Technical"",""failedRound"":""HR Round"",""notes"":""Good communication""}],""totalDrives"":3,""totalRoundsQualified"":3}"
-Alex Brown,2024005,CSE,3,2020-2024,alex@example.com,1234567894,true,Microsoft,18,Software Engineer,https://example.com/photo3.jpg,https://example.com/offer3.pdf,https://example.com/id-card3.pdf,`,
+      students: `name,rollNumber,branch,year,batch,email,phone,selected,companyName,package,role,photoUrl,offerLetterUrl,idCardUrl,driveCompanyName,driveDate,driveRoundsQualified,driveRoundsName,driveStatus,driveOfferPackage,driveNotes
+John Doe,2024001,CSE,3,2020-2024,john@example.com,1234567890,true,TCS,12,Software Engineer,https://example.com/photo.jpg,https://example.com/offer.pdf,https://example.com/id-card.pdf,,,,,,
+Jane Smith,2024002,ECE,2,2020-2024,jane@example.com,1234567891,false,,,,,,,TCS,15-01-2024,2,"Aptitude, Technical",not shortlisted,,Good technical skills
+Jane Smith,2024002,ECE,2,2020-2024,jane@example.com,1234567891,false,,,,,,,Infosys,20-02-2024,1,Aptitude,not shortlisted,,Need to improve coding skills
+Mike Johnson,2024003,CSE,4,2020-2024,mike@example.com,1234567892,true,Infosys,10,Developer,https://example.com/photo2.jpg,https://example.com/offer2.pdf,https://example.com/id-card2.pdf,,,,,,
+Sarah Wilson,2024004,ECE,1,2021-2025,sarah@example.com,1234567893,false,,,,,,,Wipro,20-02-2024,1,Aptitude,not shortlisted,,Need more practice
+Sarah Wilson,2024004,ECE,1,2021-2025,sarah@example.com,1234567893,false,,,,,,,HCL,10-03-2024,0,None,not shortlisted,,Aptitude needs improvement
+Alex Brown,2024005,CSE,3,2020-2024,alex@example.com,1234567894,true,Microsoft,18,Software Engineer,https://example.com/photo3.jpg,https://example.com/offer3.pdf,https://example.com/id-card3.pdf,,,,,,`,
+      driveDetails: `rollNumber,companyName,date,roundsQualified,roundsName,failedRound,notes
+2024002,TCS,15-01-2024,2,Aptitude Technical,HR Round,Good technical skills
+2024002,Infosys,20-02-2024,1,Aptitude,Technical Round,Need to improve coding skills
+2024004,Wipro,20-02-2024,1,Aptitude,Technical Round,Need more practice
+2024004,HCL,10-03-2024,0,None,Aptitude Round,Aptitude needs improvement`,
       events: `title,description,company,startDate,endDate,notificationLink,attachmentUrl
 Campus Drive,Technical interview and coding round,TCS,2024-03-15T09:00:00Z,2024-03-15T17:00:00Z,,
 Placement Drive,Final placement round,Infosys,2024-03-20T10:00:00Z,2024-03-20T16:00:00Z,https://example.com/notification,`,
@@ -130,9 +137,10 @@ Mike Johnson,2020003,2020,job,,,Microsoft,20,Developer,https://example.com/offer
           {/* Import Type Selection */}
           <div className="space-y-2">
             <Label>Import Type</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               {[
                 { value: 'students', label: 'Students', icon: Users },
+                { value: 'driveDetails', label: 'Drive Details', icon: FileText },
                 { value: 'events', label: 'Events', icon: Calendar },
                 { value: 'alumni', label: 'Alumni', icon: GraduationCap },
                 { value: 'attendance', label: 'Attendance', icon: FileText },
@@ -225,17 +233,30 @@ Mike Johnson,2020003,2020,job,,,Microsoft,20,Developer,https://example.com/offer
             <div>
               <h4 className="font-medium mb-2">Students CSV Format:</h4>
               <p className="text-slate-600">
-                name, rollNumber, branch, year, batch, email, phone, selected, companyName, package, role, photoUrl, offerLetterUrl, idCardUrl, driveDetails
+                name, rollNumber, branch, year, batch, email, phone, selected, companyName, package, role, photoUrl, offerLetterUrl, idCardUrl, driveCompanyName, driveDate, driveRoundsQualified, driveRoundsName, driveStatus, driveOfferPackage, driveNotes
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                • Required: name, rollNumber • year: study year (1, 2, 3, 4) • batch: study period (e.g., "2020-2024") • selected: true/false • package: LPA (number) • role: only for placed students • photoUrl: student photo URL • offerLetterUrl: offer letter URL for placed students • idCardUrl: ID card URL for placed students • driveDetails: JSON string for not placed students (see template for format)
+                • Required: name, rollNumber • year: study year (1, 2, 3, 4) • batch: study period (e.g., "2020-2024").
+                • For placed students: set selected=true and optionally fill companyName, package (LPA), role, photoUrl, offerLetterUrl, idCardUrl.
+                • For not placed students: leave selected=false and include one row per drive attempt using driveCompanyName, driveDate (DD-MM-YYYY), driveRoundsQualified (number), driveRoundsName (e.g., "Aptitude, Technical"), driveStatus (shortlisted/not shortlisted), driveOfferPackage (LPA), driveNotes. Duplicate student info can be repeated across drive rows.
               </p>
-              <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
-                <p className="font-medium text-blue-800 mb-1">Drive Details Format (for not placed students):</p>
-                <p className="text-blue-700">{`{"drives":[{"id":"1","companyName":"TCS","date":"2024-01-15","roundsQualified":2,"roundsName":"Aptitude, Technical","failedRound":"HR Round","notes":"Good technical skills"},{"id":"2","companyName":"Infosys","date":"2024-02-20","roundsQualified":1,"roundsName":"Aptitude","failedRound":"Technical Round","notes":"Need to improve coding skills"},{"id":"3","companyName":"Wipro","date":"2024-03-10","roundsQualified":3,"roundsName":"Aptitude, Technical, HR","failedRound":"Final Round","notes":"Strong in aptitude"}],"totalDrives":3,"totalRoundsQualified":6}`}</p>
-                <p className="text-blue-600 mt-2 text-xs">
-                  <strong>Fields:</strong> id (unique), companyName, date (YYYY-MM-DD), roundsQualified (number), roundsName (string), failedRound (string), notes (optional)
-                </p>
+              <div className="text-xs text-slate-500 mt-1">
+                <span className="font-medium">Tip:</span> Multiple rows with same rollNumber are merged into a single student with aggregated drive details.
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Drive Details CSV Format:</h4>
+              <p className="text-slate-600">
+                rollNumber, companyName, date, roundsQualified, roundsName, failedRound, notes
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                • Required: rollNumber, companyName, date, roundsQualified, roundsName, failedRound • rollNumber: must match existing student • date: YYYY-MM-DD format • roundsQualified: number of rounds cleared • roundsName: description of rounds (e.g., "Aptitude, Technical") • failedRound: where student failed • notes: optional comments
+              </p>
+              <div className="mt-2 p-2 bg-green-50 rounded text-xs">
+                <p className="font-medium text-green-800 mb-1">✅ Easy Format:</p>
+                <p className="text-green-700">Each row represents one drive attempt. Multiple rows for same rollNumber = multiple drives.</p>
+                <p className="text-green-700 mt-1"><strong>Step 1:</strong> Import students first</p>
+                <p className="text-green-700"><strong>Step 2:</strong> Import drive details for existing students</p>
               </div>
             </div>
             <div>

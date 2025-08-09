@@ -4,7 +4,8 @@ export interface DriveDetail {
   date: string;
   roundsQualified: number;
   roundsName: string; // Names/types of rounds qualified (e.g., "Aptitude, Technical, HR")
-  failedRound: string;
+  status: string; // 'shortlisted' or 'not shortlisted'
+  offerPackage?: number; // Company offer for this specific drive (LPA)
   notes?: string;
 }
 

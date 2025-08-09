@@ -583,8 +583,8 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
                     <>
                       {driveData.drives.length > 0 ? (
                         <div className="space-y-4">
-                          <div className="bg-red-50 p-4 rounded-lg">
-                            <h4 className="font-medium text-red-800 mb-3">Drive History</h4>
+                          <div className="bg-slate-50 p-4 rounded-lg">
+                            <h4 className="font-medium text-slate-800 mb-3">Drive History</h4>
                             <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                               <div>
                                 <span className="font-medium">Total Drives:</span> {driveData.totalDrives}
@@ -596,16 +596,19 @@ export const StudentDetails: React.FC<StudentDetailsProps> = ({ student, onBack,
                             
                             <div className="space-y-3">
                               {driveData.drives.map((drive: any, index: number) => (
-                                <div key={drive.id || index} className="border border-red-200 rounded p-3 bg-white">
+                                <div key={drive.id || index} className="border border-slate-200 rounded p-3 bg-white">
                                   <div className="flex justify-between items-start mb-2">
-                                    <h5 className="font-medium text-red-800">Drive #{index + 1}</h5>
-                                    <span className="text-xs text-red-600">{drive.date}</span>
+                                    <h5 className="font-medium text-slate-800">Drive #{index + 1}</h5>
+                                    <span className="text-xs text-slate-600">{drive.date}</span>
                                   </div>
                                   <div className="space-y-1 text-sm">
                                     <p><span className="font-medium">Company:</span> {drive.companyName}</p>
                                     <p><span className="font-medium">Rounds Qualified:</span> {drive.roundsQualified}</p>
                                     <p><span className="font-medium">Rounds Name:</span> {drive.roundsName}</p>
-                                    <p><span className="font-medium">Failed at:</span> {drive.failedRound}</p>
+                                    <p><span className="font-medium">Status:</span> {drive.status || (student.selected && drive.companyName === student.companyName ? 'shortlisted' : 'not shortlisted')}</p>
+                                    {typeof drive.offerPackage === 'number' && (
+                                      <p><span className="font-medium">Offer Package:</span> {drive.offerPackage} LPA</p>
+                                    )}
                                     {drive.notes && (
                                       <p><span className="font-medium">Notes:</span> {drive.notes}</p>
                                     )}

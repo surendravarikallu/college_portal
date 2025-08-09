@@ -312,7 +312,8 @@ export function StudentManagement() {
       date: new Date().toISOString().split('T')[0],
       roundsQualified: 0,
       roundsName: "",
-      failedRound: "",
+      status: "not shortlisted",
+      offerPackage: undefined,
       notes: "",
     };
     
@@ -790,12 +791,22 @@ export function StudentManagement() {
                               </div>
                               
                               <div>
-                                <Label htmlFor={`failed-${drive.id}`}>Failed at Round</Label>
+                                <Label htmlFor={`status-${drive.id}`}>Status</Label>
                                 <Input
-                                  id={`failed-${drive.id}`}
-                                  value={drive.failedRound}
-                                  onChange={(e) => updateDriveDetail(drive.id, 'failedRound', e.target.value)}
-                                  placeholder="e.g., Technical Round, HR Round"
+                                  id={`status-${drive.id}`}
+                                  value={drive.status}
+                                  onChange={(e) => updateDriveDetail(drive.id, 'status', e.target.value)}
+                                  placeholder="shortlisted / not shortlisted"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor={`offer-${drive.id}`}>Offer Package (LPA)</Label>
+                                <Input
+                                  id={`offer-${drive.id}`}
+                                  type="number"
+                                  min="0"
+                                  value={drive.offerPackage ?? ''}
+                                  onChange={(e) => updateDriveDetail(drive.id, 'offerPackage', e.target.value === '' ? undefined : parseInt(e.target.value))}
                                 />
                               </div>
                             </div>

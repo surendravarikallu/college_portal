@@ -1235,87 +1235,152 @@ export function registerRoutes(app: Express): Server {
       let imported = 0;
       const errors: string[] = [];
 
+      // Normalize date string to YYYY-MM-DD, accepting DD-MM-YYYY too
+      const normalizeDate = (raw: string | undefined, onError: (msg: string) => void): string | undefined => {
+        if (!raw) return undefined;
+        const yyyyMmDd = /^(\d{4})-(\d{2})-(\d{2})$/;
+        const ddMmYyyy = /^(\d{2})-(\d{2})-(\d{4})$/;
+        if (yyyyMmDd.test(raw)) return raw;
+        const m = raw.match(ddMmYyyy);
+        if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+        onError(`Invalid date format: ${raw}. Use DD-MM-YYYY`);
+        return undefined;
+      };
+
+      // Aggregate per student (by rollNumber)
+      const studentRowsByRoll: Record<string, any[]> = {};
+      const headerIndex: Record<string, number> = {};
+      headers.forEach((h, idx) => (headerIndex[h] = idx));
+
       for (let i = 0; i < data.length; i++) {
         const row = data[i];
         if (!row.trim()) continue;
-
         const values = parseCSVLine(row);
+        const roll = values[headerIndex['rollNumber']] || '';
+        if (!roll) {
+          errors.push(`Row ${i + 2}: Missing rollNumber`);
+          continue;
+        }
+        if (!studentRowsByRoll[roll]) studentRowsByRoll[roll] = [];
+        studentRowsByRoll[roll].push(values);
+      }
+
+      for (const [rollNumber, rows] of Object.entries(studentRowsByRoll)) {
+        // Build base student from the first row
+        const first = rows[0];
+        const get = (name: string) => first[headerIndex[name]] || '';
         const studentData: any = {};
 
-        headers.forEach((header, index) => {
-          const value = values[index] || '';
-          // Skip empty values for optional fields
-          if (value === '' || value === undefined || value === null) {
-            return;
-          }
-          
-          switch (header) {
-            case 'name':
-            case 'rollNumber':
-            case 'branch':
-            case 'email':
-            case 'phone':
-            case 'companyName':
-            case 'role':
-            case 'photoUrl':
-            case 'offerLetterUrl':
-            case 'idCardUrl':
-            case 'batch':
-              studentData[header] = value;
-              break;
-            case 'year':
-              const yearValue = parseInt(value);
-              if (!isNaN(yearValue) && yearValue >= 1 && yearValue <= 4) {
-                studentData[header] = yearValue;
-              } else {
-                errors.push(`Row ${i + 2}: Year must be between 1 and 4 (study year)`);
-                // Skip this row by not setting the year value
-              }
-              break;
-            case 'package':
-              const numValue = parseInt(value);
-              if (!isNaN(numValue)) {
-                studentData[header] = numValue;
-              }
-              break;
-            case 'selected':
-              studentData[header] = value.toLowerCase() === 'true';
-              break;
-            case 'driveDetails':
-              // Handle drive details as JSON string
-              try {
-                if (value.trim()) {
-                  // If it's a JSON string, validate it
-                  JSON.parse(value);
-                  studentData[header] = value;
-                }
-              } catch (e) {
-                // If it's not valid JSON, skip it
-                console.warn(`Invalid driveDetails JSON in row ${i + 2}: ${value}`);
-              }
-              break;
-          }
+        // Simple string fields
+        ['name','rollNumber','branch','email','phone','companyName','role','photoUrl','offerLetterUrl','idCardUrl','batch'].forEach((f) => {
+          const v = get(f);
+          if (v) studentData[f] = v;
         });
 
-        // Validate year field after processing all headers
-        if (studentData.year !== undefined && (studentData.year < 1 || studentData.year > 4)) {
-          errors.push(`Row ${i + 2}: Year must be between 1 and 4 (study year)`);
+        // Year
+        const yearStr = get('year');
+        if (yearStr) {
+          const yearValue = parseInt(yearStr);
+          if (!isNaN(yearValue) && yearValue >= 1 && yearValue <= 4) {
+            studentData.year = yearValue;
+          } else {
+            errors.push(`Student ${rollNumber}: Year must be between 1 and 4`);
+          }
+        }
+
+        // Package
+        const pkgStr = get('package');
+        if (pkgStr) {
+          const numValue = parseInt(pkgStr);
+          if (!isNaN(numValue)) studentData.package = numValue;
+        }
+
+        // Selected
+        const selStr = get('selected');
+        if (selStr) studentData.selected = selStr.toLowerCase() === 'true';
+
+        // Collect drives from all rows where drive columns are present
+        const driveCompanyIdx = headerIndex['driveCompanyName'] ?? headerIndex['companyName'];
+        const driveDateIdx = headerIndex['driveDate'] ?? headerIndex['date'];
+        const driveRoundsQualifiedIdx = headerIndex['driveRoundsQualified'] ?? headerIndex['roundsQualified'];
+        const driveRoundsNameIdx = headerIndex['driveRoundsName'] ?? headerIndex['roundsName'];
+        const driveFailedRoundIdx = headerIndex['driveFailedRound'] ?? headerIndex['failedRound'];
+        const driveNotesIdx = headerIndex['driveNotes'] ?? headerIndex['notes'];
+        const driveStatusIdx = headerIndex['driveStatus'] ?? headerIndex['failedRound'];
+        const driveOfferPackageIdx = headerIndex['driveOfferPackage'];
+
+        const drives: any[] = [];
+        if (
+          driveCompanyIdx !== undefined &&
+          driveDateIdx !== undefined &&
+          driveRoundsQualifiedIdx !== undefined &&
+          driveRoundsNameIdx !== undefined &&
+          driveFailedRoundIdx !== undefined
+        ) {
+          rows.forEach((vals, rIdx) => {
+            const companyName = vals[driveCompanyIdx];
+            const rawDate = vals[driveDateIdx];
+            const roundsQualifiedStr = vals[driveRoundsQualifiedIdx];
+            const roundsName = vals[driveRoundsNameIdx];
+            const statusRaw = driveStatusIdx !== undefined ? vals[driveStatusIdx] : '';
+            const statusBase = (statusRaw || '').toString().toLowerCase().includes('shortlisted') ? 'shortlisted' : 'not shortlisted';
+            const offerPkgStr = driveOfferPackageIdx !== undefined ? vals[driveOfferPackageIdx] : '';
+            const offerPackage = offerPkgStr ? parseInt(offerPkgStr) : undefined;
+            const notes = driveNotesIdx !== undefined ? vals[driveNotesIdx] : '';
+            if (!companyName && !rawDate && !roundsQualifiedStr && !roundsName && !statusRaw && !offerPkgStr && !notes) return;
+            const date = normalizeDate(rawDate, (msg) => {
+              errors.push(`Student ${rollNumber} row ${rIdx + 2}: ${msg}`);
+            });
+            const roundsQualified = parseInt(roundsQualifiedStr || '0');
+            if (isNaN(roundsQualified) || roundsQualified < 0) {
+              errors.push(`Student ${rollNumber} row ${rIdx + 2}: roundsQualified must be a non-negative number`);
+              return;
+            }
+            const effectiveStatus = (!statusRaw && studentData.selected && studentData.companyName && companyName && studentData.companyName === companyName)
+              ? 'shortlisted'
+              : statusBase;
+            drives.push({
+              id: `${rollNumber}-${rIdx + 1}`,
+              companyName,
+              date: date || undefined,
+              roundsQualified,
+              roundsName: roundsName || '',
+              status: effectiveStatus,
+              offerPackage,
+              notes: notes || ''
+            });
+          });
+        }
+
+        if (!studentData.name || !studentData.rollNumber) {
+          errors.push(`Student ${rollNumber}: Name and rollNumber are required fields`);
           continue;
         }
 
-        try {
-          // Validate required fields
-          if (!studentData.name || !studentData.rollNumber) {
-            errors.push(`Row ${i + 2}: Name and rollNumber are required fields`);
-            continue;
+        // Attach aggregated driveDetails for any student if drives exist
+        if (drives.length > 0) {
+          if (typeof studentData.selected === 'undefined') {
+            studentData.selected = false;
           }
-          
+          studentData.driveDetails = JSON.stringify({
+            drives,
+            totalDrives: drives.length,
+            totalRoundsQualified: drives.reduce((s, d) => s + (d.roundsQualified || 0), 0)
+          });
+        }
+
+        try {
+          const existing = await storage.getStudentByRollNumber(rollNumber);
           const validatedData = insertStudentSchema.parse(studentData);
-          await storage.createStudent(validatedData);
+          if (existing) {
+            await storage.updateStudent(existing.id, validatedData);
+          } else {
+            await storage.createStudent(validatedData);
+          }
           imported++;
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          errors.push(`Row ${i + 2}: ${errorMessage}`);
+          errors.push(`Student ${rollNumber}: ${errorMessage}`);
         }
       }
 
@@ -1328,6 +1393,163 @@ export function registerRoutes(app: Express): Server {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ success: false, message: "Failed to import students", imported: 0, errors: [errorMessage] });
+    }
+  });
+
+  // Import drive details route
+  app.post("/api/import/driveDetails", upload.single('file'), async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "No file uploaded", imported: 0, errors: [] });
+      }
+
+      const csvContent = req.file.buffer.toString();
+      const lines = csvContent.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "CSV file must have at least a header row and one data row", 
+          imported: 0, 
+          errors: [] 
+        });
+      }
+      
+      const headers = parseCSVLine(lines[0]);
+      const data = lines.slice(1);
+
+      let imported = 0;
+      const errors: string[] = [];
+
+      // Normalize date string to YYYY-MM-DD, accepting DD-MM-YYYY too
+      const normalizeDate = (raw: string | undefined, onError: (msg: string) => void): string | undefined => {
+        if (!raw) return undefined;
+        const yyyyMmDd = /^(\d{4})-(\d{2})-(\d{2})$/;
+        const ddMmYyyy = /^(\d{2})-(\d{2})-(\d{4})$/;
+        if (yyyyMmDd.test(raw)) return raw;
+        const m = raw.match(ddMmYyyy);
+        if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+        onError(`Invalid date format: ${raw}. Use DD-MM-YYYY`);
+        return undefined;
+      };
+
+      // Group drive details by rollNumber
+      const driveDetailsByStudent: { [rollNumber: string]: any[] } = {};
+
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+        if (!row.trim()) continue;
+
+        const values = parseCSVLine(row);
+        const driveData: any = {};
+
+        headers.forEach((header, index) => {
+          const value = values[index] || '';
+          if (value === '' || value === undefined || value === null) {
+            return;
+          }
+          
+          switch (header) {
+            case 'rollNumber':
+            case 'companyName':
+            case 'roundsName':
+            case 'status':
+            case 'notes':
+              driveData[header] = value;
+              break;
+            case 'date':
+              driveData[header] = normalizeDate(value, (msg) => {
+                errors.push(`Row ${i + 2}: ${msg}`);
+              });
+              break;
+            case 'roundsQualified':
+              const roundsValue = parseInt(value);
+              if (!isNaN(roundsValue) && roundsValue >= 0) {
+                driveData[header] = roundsValue;
+              } else {
+                errors.push(`Row ${i + 2}: roundsQualified must be a non-negative number`);
+              }
+              break;
+            case 'offerPackage':
+              if (value !== '') {
+                const pkg = parseInt(value);
+                if (!isNaN(pkg) && pkg >= 0) {
+                  driveData[header] = pkg;
+                } else {
+                  errors.push(`Row ${i + 2}: offerPackage must be a non-negative number`);
+                }
+              }
+              break;
+          }
+        });
+
+        // Validate required fields
+        const requiredFields = ['rollNumber', 'companyName', 'date', 'roundsQualified', 'roundsName', 'failedRound'];
+        const missingFields = requiredFields.filter(field => !driveData[field]);
+        
+        if (missingFields.length > 0) {
+          errors.push(`Row ${i + 2}: Missing required fields: ${missingFields.join(', ')}`);
+          continue;
+        }
+
+        // Check if student exists
+        const student = await storage.getStudentByRollNumber(driveData.rollNumber);
+        if (!student) {
+          errors.push(`Row ${i + 2}: Student with rollNumber ${driveData.rollNumber} not found`);
+          continue;
+        }
+
+        // Add to grouped data
+        if (!driveDetailsByStudent[driveData.rollNumber]) {
+          driveDetailsByStudent[driveData.rollNumber] = [];
+        }
+        driveDetailsByStudent[driveData.rollNumber].push(driveData);
+      }
+
+      // Update students with drive details
+      for (const [rollNumber, drives] of Object.entries(driveDetailsByStudent)) {
+        try {
+          const student = await storage.getStudentByRollNumber(rollNumber);
+          if (!student) continue;
+
+          // Convert to the expected JSON format
+          const driveDetails = {
+            drives: drives.map((drive, index) => ({
+              id: `${Date.now()}_${index}`,
+              companyName: drive.companyName,
+              date: drive.date,
+              roundsQualified: drive.roundsQualified,
+              roundsName: drive.roundsName,
+              status: (drive.status || '').toString().toLowerCase().includes('shortlisted') ? 'shortlisted' : 'not shortlisted',
+              offerPackage: typeof drive.offerPackage === 'number' ? drive.offerPackage : undefined,
+              notes: drive.notes || ''
+            })),
+            totalDrives: drives.length,
+            totalRoundsQualified: drives.reduce((sum, drive) => sum + drive.roundsQualified, 0)
+          };
+
+          // Update student with drive details
+          await storage.updateStudent(student.id, {
+            driveDetails: JSON.stringify(driveDetails)
+          });
+
+          imported++;
+        } catch (error) {
+          errors.push(`Failed to update student ${rollNumber}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+
+      res.json({
+        success: imported > 0,
+        message: `Imported ${imported} drive details successfully${errors.length > 0 ? ` with ${errors.length} errors` : ''}`,
+        imported,
+        errors
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ success: false, message: "Failed to import drive details", imported: 0, errors: [errorMessage] });
     }
   });
 
